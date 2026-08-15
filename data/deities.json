@@ -1,0 +1,98 @@
+﻿[
+    {
+        "id":  "DEI-P01",
+        "code":  "OG-P01",
+        "title":  "白曐",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P01 白曐.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P02",
+        "code":  "OG-P02",
+        "title":  "埃尔德",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P02 埃尔德.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P03",
+        "code":  "OG-P03",
+        "title":  "阿克图斯",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P03 阿克图斯.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P04",
+        "code":  "OG-P04",
+        "title":  "克索恩",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P04 克索恩.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P05",
+        "code":  "OG-P05",
+        "title":  "塞墨勒",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P05 塞墨勒.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P06",
+        "code":  "OG-P06",
+        "title":  "俄涅洛",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P06 俄涅洛.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P07",
+        "code":  "OG-P07",
+        "title":  "弗拉马",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P07 弗拉马.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P08",
+        "code":  "OG-P08",
+        "title":  "曼内斯",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P08 曼内斯.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P10",
+        "code":  "OG-P10",
+        "title":  "庞图斯",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P10 庞图斯.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P11",
+        "code":  "OG-P11",
+        "title":  "尤瑞诺",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P11 尤瑞诺.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-P12",
+        "code":  "OG-P12",
+        "title":  "俄勃利",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/OG-P12 俄勃利.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    },
+    {
+        "id":  "DEI-12",
+        "code":  "",
+        "title":  "阿诺尼",
+        "summary":  "神祇档案待补完",
+        "img":  "deities/阿诺尼.png",
+        "body":  "\u003cp\u003e神祇详细档案待整理。\u003c/p\u003e"
+    }
+]

@@ -1,0 +1,18 @@
+# 忽略实际配置（含密钥！不要提交到 Git）
+.env
+
+# 运行时生成的 JSON 存储
+data/*.json
+!data/.gitkeep
+
+# 依赖
+node_modules/
+package-lock.json
+
+# 日志
+*.log
+npm-debug.log*
+
+# 系统
+.DS_Store
+Thumbs.db

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世界观察档案库 · Worldview Archive</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="shortcut icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="style.css?v=17">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- 顶部档案库标识栏 -->
+  <header id="archive-header">
+    <div class="header-inner">
+      <button class="sidebar-toggle" id="sidebar-toggle" title="切换侧边栏" aria-label="切换侧边栏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a href="#/" class="logo" aria-label="返回首页">
+        <span class="logo-mark" id="logo-mark">
+          <img src="data/logo-mark.png" alt="LOGO"
+               onerror="(function(el){var n='data/logo-mark.jpg,x.jpg,首页 HERO 巨幕背景.png,logo.png,logo.jpg'.split(','),i=0;function t(){if(i>=n.length){el.style.display='none';document.getElementById('logo-mark-fallback').style.display='grid';return;}var p=n[i++],im=new Image();im.onload=function(){el.src=p;};im.onerror=t;im.src=p;}})(this)">
+          <span class="logo-mark-fallback" id="logo-mark-fallback" style="display:none">◈</span>
+        </span>
+        <div class="logo-text">
+          <span class="logo-title">世界观察档案库</span>
+          <span class="logo-sub">WORLDVIEW ARCHIVE · 分级访问系统</span>
+        </div>
+      </a>
+      <nav class="header-nav" id="main-nav">
+        <a href="#/" class="nav-link" data-route="/">首页</a>
+        <span id="nav-cats-inline" style="display:contents"></span>
+        <a href="#/mindmap" class="nav-link" data-route="/mindmap">思维导图</a>
+      </nav>
+      <div class="header-search">
+        <input type="text" id="global-search" placeholder="检索档案编号 / 代号 / 关键词..." autocomplete="off">
+        <div id="search-dropdown" class="search-dropdown">
+          <div class="sd-section" id="sd-suggest" style="display:none">
+            <div class="sd-title">建议</div>
+            <div class="sd-list" id="sd-suggest-list"></div>
+          </div>
+          <div class="sd-section" id="sd-history">
+            <div class="sd-title">
+              <span>搜索历史</span>
+              <button type="button" id="sh-clear" class="sd-clear" title="清除历史">清除</button>
+            </div>
+            <div class="sd-list" id="sd-history-list"></div>
+          </div>
+          <div class="sd-empty" id="sd-empty" style="display:none">暂无搜索历史</div>
+        </div>
+        <button id="search-btn">检索</button>
+        <button id="logout-btn" class="logout-btn" title="退出系统" style="display:none">⧉ 登出</button>
+      </div>
+    </div>
+    <div class="header-status">
+      <span class="status-item">身份：<strong id="stat-identity">访客 LV.1</strong></span>
+      <span class="status-sep">·</span>
+      <span class="status-item">在档条目：<strong id="stat-total">—</strong></span>
+      <span class="status-sep">·</span>
+      <span class="status-item">最近更新：<strong id="stat-updated">—</strong></span>
+      <span class="status-sep">·</span>
+      <button type="button" class="status-item sfx-toggle-btn" id="sfx-toggle-header" title="音效开关" style="background:none;border:none;padding:0 4px;color:var(--text-2);font-family:var(--f-mono);font-size:11px;letter-spacing:1px;cursor:pointer;" aria-label="音效开关">
+        <svg id="sfx-ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <svg id="sfx-ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;width:14px;height:14px;vertical-align:-2px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        <span id="sfx-label-header">音效</span>
+      </button>
+      <span class="status-sep" id="stat-sep-account" style="display:none">·</span>
+      <a href="javascript:void(0)" class="status-item account-btn" id="account-btn" style="display:none" title="账号管理">⚙ 账号管理</a>
+    </div>
+  </header>
+
+  <!-- 侧边栏遮罩（移动端） -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- 侧边导航栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <span class="sidebar-title">导航中枢</span>
+      <button class="sidebar-close" id="sidebar-close" title="收起侧边栏" aria-label="收起侧边栏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">档案分类</div>
+        <a href="#/" class="sidebar-link" data-route="/">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>首页</span>
+        </a>
+        <div id="sb-cat-links" style="display:contents"></div>
+        <a href="#/mindmap" class="sidebar-link" data-route="/mindmap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="5" y1="5" x2="7.5" y2="7.5"/><line x1="16.5" y1="16.5" x2="19" y2="19"/><line x1="5" y1="19" x2="7.5" y2="16.5"/><line x1="16.5" y1="7.5" x2="19" y2="5"/></svg>
+          <span>思维导图</span>
+        </a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">用户操作</div>
+        <a href="#/submit" class="sidebar-link" data-route="/submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M12,20h9"/><path d="M16.5,3.5a2.1,2.1,0,0,1,3,3L7,19l-4,1,1-4Z"/></svg>
+          <span>投稿设定</span>
+        </a>
+        <a href="#/search" class="sidebar-link" data-route="/search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <span>搜索档案</span>
+        </a>
+        <a href="#/admin" class="sidebar-link sidebar-admin-link" data-route="/admin" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12,2L4,5v6c0,5.5,3.8,10.7,8,12c4.2-1.3,8-6.5,8-12V5L12,2z"/></svg>
+          <span>管理后台</span>
+        </a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">快捷操作</div>
+        <button class="sidebar-link sidebar-action" id="sb-theme-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>
+          <span>主题切换</span>
+        </button>
+        <button class="sidebar-link sidebar-action" id="sb-back-top">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,5 19,12"/></svg>
+          <span>返回顶部</span>
+        </button>
+        <button class="sidebar-link sidebar-action" id="sb-export-data">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M19,21H5a2,2,0,0,1-2-2V5A2,2,0,0,1,5,3H16l5,5V19A2,2,0,0,1,19,21Z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+          <span>导出备份</span>
+        </button>
+        <button class="sidebar-link sidebar-action" id="sb-sfx-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <span id="sb-sfx-label">音效：开</span>
+        </button>
+        <div class="sidebar-sfx-vol" id="sb-sfx-vol-wrap" style="display:none;padding:4px 14px 4px 38px;align-items:center;gap:8px;font-family:var(--f-mono);font-size:10px;color:var(--text-2);">
+          <span style="flex-shrink:0;">音量</span>
+          <input type="range" id="sb-sfx-vol" min="0" max="100" value="50" style="flex:1;height:2px;-webkit-appearance:none;appearance:none;background:var(--border);outline:none;cursor:pointer;">
+          <span id="sb-sfx-vol-val" style="flex-shrink:0;min-width:24px;text-align:right;">50</span>
+        </div>
+        <button class="sidebar-link sidebar-action" id="sb-bgm-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <span id="sb-bgm-label">背景音乐：关</span>
+        </button>
+        <div class="sidebar-bgm-vol" id="sb-bgm-vol-wrap" style="display:none;padding:4px 14px 4px 38px;align-items:center;gap:8px;font-family:var(--f-mono);font-size:10px;color:var(--text-2);">
+          <span style="flex-shrink:0;">音量</span>
+          <input type="range" id="sb-bgm-vol" min="0" max="100" value="18" style="flex:1;height:2px;-webkit-appearance:none;appearance:none;background:var(--border);outline:none;cursor:pointer;">
+          <span id="sb-bgm-vol-val" style="flex-shrink:0;min-width:24px;text-align:right;">18</span>
+        </div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-stat" id="sb-stat-identity">身份：访客 LV.1</div>
+      <div class="sidebar-stat" id="sb-stat-total">在档条目：—</div>
+    </div>
+  </aside>
+
+  <!-- 主内容区（SPA 挂载点） -->
+  <main id="main-content">
+    <div id="view-container">加载中...</div>
+  </main>
+
+  <!-- 底部 -->
+  <footer id="archive-footer">
+    <div class="footer-inner">
+      <p>世界观察档案库 · 本站为虚构世界观整理项目</p>
+      <p class="footer-small">所有"档案"皆为创作内容 · 不代表现实组织或事件 · 内容整理自项目方提供资料</p>
+    </div>
+  </footer>
+
+  <!-- 移动端底部导航栏 -->
+  <nav class="mobile-tabbar" id="mobile-tabbar" aria-label="移动端导航">
+    <a href="#/" class="mtab" data-route="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5z"/></svg><span>首页</span></a>
+    <a href="#/anomalies" class="mtab" data-route="/anomalies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2L4 7v7c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-5z"/></svg><span>档案</span></a>
+    <a href="#/timelines" class="mtab" data-route="/timelines"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg><span>时间线</span></a>
+    <a href="#/mindmap" class="mtab" data-route="/mindmap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v4M10 13l-3 4M14 13l3 4"/></svg><span>导图</span></a>
+    <button type="button" class="mtab mtab-menu" id="mtab-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><span>菜单</span></button>
+  </nav>
+
+</div>
+
+<!-- 登录门禁屏（未登录时覆盖在 #app 上） -->
+<div id="login-gate" style="display:none">
+  <div class="lg-bg">
+    <canvas id="lg-canvas"></canvas>
+    <div class="lg-grid"></div>
+    <div class="lg-scan"></div>
+    <div class="lg-vignette"></div>
+  </div>
+  <div class="lg-wrap">
+    <div class="lg-card">
+      <div class="lg-corner tl"></div>
+      <div class="lg-corner tr"></div>
+      <div class="lg-corner bl"></div>
+      <div class="lg-corner br"></div>
+
+      <div class="lg-head">
+        <div class="lg-head-top">
+          <span class="lg-dot"></span>
+          GATE-04 / SECURE ACCESS TERMINAL
+          <span class="lg-dot"></span>
+        </div>
+        <div class="lg-logo">
+          <span class="lg-logo-mark" id="lg-logo-mark">
+            <img src="data/logo-mark.png" alt=""
+                 onerror="(function(el){var n='data/logo-mark.jpg,x.jpg,首页 HERO 巨幕背景.png,logo.png,logo.jpg'.split(','),i=0,fb=el.nextElementSibling;function t(){if(i>=n.length){el.style.display='none';if(fb)fb.style.display='grid';return;}var p=n[i++],im=new Image();im.onload=function(){el.src=p;};im.onerror=t;im.src=p;}})(this)">
+            <span style="display:none">◈</span>
+          </span>
+          <div class="lg-logo-text">
+            <div class="lg-title">世界观察档案库</div>
+            <div class="lg-sub">WORLDVIEW · ARCHIVE · v2.71</div>
+          </div>
+        </div>
+        <div class="lg-tag">机密文件分级访问系统 · 第 4 号门禁终端</div>
+      </div>
+
+      <!-- Tab 切换 -->
+      <div class="lg-tabs">
+        <button class="lg-tab active" data-tab="login">登录 · LOGIN</button>
+        <button class="lg-tab" data-tab="register">注册 · REGISTER</button>
+      </div>
+
+      <!-- 登录表单 -->
+      <form id="lg-form-login" class="lg-form lg-form-active" autocomplete="off">
+        <label class="lg-field">
+          <span class="lg-label">手机号 / 邮箱 · CONTACT</span>
+          <input type="text" id="lg-login-contact" placeholder="输入手机号或邮箱" required>
+        </label>
+        <label class="lg-field">
+          <span class="lg-label">通行密钥 · PASSWORD</span>
+          <input type="password" id="lg-login-pass" placeholder="6 位以上字符" required minlength="6">
+          <button type="button" class="lg-eye" id="lg-eye-login" title="显示密钥">◉</button>
+        </label>
+        <button type="submit" class="lg-submit" id="lg-submit-login">
+          <span class="lg-btn-text">◈ 登录档案系统</span>
+          <span class="lg-btn-loader"></span>
+        </button>
+        <div class="lg-error" id="lg-error-login" style="display:none"></div>
+      </form>
+
+      <!-- 注册表单 -->
+      <form id="lg-form-register" class="lg-form" autocomplete="off" style="display:none">
+        <label class="lg-field">
+          <span class="lg-label">手机号 / 邮箱 · CONTACT</span>
+          <input type="text" id="lg-reg-contact" placeholder="输入手机号或邮箱（用于接收验证码）" required>
+        </label>
+        <label class="lg-field lg-field-code">
+          <span class="lg-label">验证码 · VERIFICATION CODE</span>
+          <div class="lg-code-row">
+            <input type="text" id="lg-reg-code" placeholder="6 位验证码" maxlength="6" required>
+            <button type="button" class="lg-code-btn" id="lg-send-code">发送验证码</button>
+          </div>
+        </label>
+        <label class="lg-field">
+          <span class="lg-label">设定密码 · PASSWORD</span>
+          <input type="password" id="lg-reg-pass" placeholder="6 位以上字符" required minlength="6">
+          <button type="button" class="lg-eye" id="lg-eye-reg" title="显示密钥">◉</button>
+        </label>
+        <label class="lg-field">
+          <span class="lg-label">确认密码 · CONFIRM</span>
+          <input type="password" id="lg-reg-pass2" placeholder="再次输入密码" required minlength="6">
+        </label>
+        <button type="submit" class="lg-submit" id="lg-submit-reg">
+          <span class="lg-btn-text">◈ 注册并登录</span>
+          <span class="lg-btn-loader"></span>
+        </button>
+        <div class="lg-error" id="lg-error-reg" style="display:none"></div>
+      </form>
+
+      <!-- 游客模式 -->
+      <div class="lg-guest-row">
+        <button type="button" class="lg-guest-btn" id="lg-guest-btn">
+          ◇ 以游客模式访问 · GUEST ACCESS (LV.1)
+        </button>
+      </div>
+
+      <div class="lg-foot">
+        <div>会话 <span id="lg-session">—</span></div>
+        <div>游客仅可浏览 · 注册登录后可投稿 (LV.2)</div>
+      </div>
+    </div>
+
+    <div class="lg-sidebar">
+      <div class="lg-side-title">SYSTEM · BROADCAST</div>
+      <div class="lg-side-item"><span>WARN</span> 未授权登录尝试将于第 3 次后触发锁定协议</div>
+      <div class="lg-side-item"><span>INFO</span> 本终端录音录像已启用</div>
+      <div class="lg-side-item"><span>INFO</span> LV.4 及以上可访问红月协议核心文档</div>
+      <div class="lg-side-item"><span>TIP</span> 推荐分辨率 1600×900 · Chrome 最新版</div>
+    </div>
+  </div>
+</div>
+
+<!-- 通用档案详情模板（由 JS 渲染挂载） -->
+<template id="tpl-entry-detail">
+  <article class="entry-detail">
+    <div class="entry-header">
+      <div class="entry-id-row">
+        <span class="entry-id"></span>
+        <span class="entry-class-badge"></span>
+      </div>
+      <h1 class="entry-title"></h1>
+      <div class="entry-meta"></div>
+    </div>
+    <div class="entry-body"></div>
+    <div class="entry-footer">
+      <a class="back-link" href="#">← 返回列表</a>
+    </div>
+  </article>
+</template>
+
+<!-- 账号管理弹窗 -->
+<div id="account-modal" class="account-modal" style="display:none" role="dialog" aria-modal="true">
+  <div class="account-modal-mask"></div>
+  <div class="account-modal-wrap">
+    <button class="account-modal-close" id="am-close" title="关闭">✕</button>
+    <div class="account-modal-inner">
+      <div class="am-head">
+        <h3>账号管理 · ACCOUNT CONTROL</h3>
+        <p class="am-sub">Worldview Archive · 终端自检面板</p>
+      </div>
+      <div class="am-body">
+        <div class="am-tabs" role="tablist">
+          <button type="button" role="tab" class="am-tab active" data-tab="account">账号信息</button>
+          <button type="button" role="tab" class="am-tab" data-tab="favorites">★ 收藏夹</button>
+          <button type="button" role="tab" class="am-tab" data-tab="reading">⟲ 阅读进度</button>
+        </div>
+        <div class="am-tabpane active" data-tabpane="account">
+          <div class="am-info-grid">
+            <div class="am-info-row">
+              <span class="am-info-k">账号 / ACCOUNT</span>
+              <span class="am-info-v" id="am-account">—</span>
+            </div>
+            <div class="am-info-row">
+              <span class="am-info-k">访问等级 / CLEARANCE</span>
+              <span class="am-info-v am-lvl" id="am-level">—</span>
+            </div>
+            <div class="am-info-row">
+              <span class="am-info-k">登录时间 / SESSION</span>
+              <span class="am-info-v" id="am-login-at">—</span>
+            </div>
+            <div class="am-info-row">
+              <span class="am-info-k">权限能力 / PERM</span>
+              <span class="am-info-v" id="am-perm">—</span>
+            </div>
+          </div>
+          <div class="am-danger">
+            <div class="am-danger-head">
+              <span class="am-danger-icon">⚠</span>
+              <strong>危险区 · ACCOUNT DELETION</strong>
+            </div>
+            <p class="am-danger-text">
+              注销账号将删除您的注册信息并清除会话。<br>
+              您的投稿作品将保留，但作者会被标记为"<strong class="am-del-tag">已注销用户</strong>"。<br>
+              <span class="am-danger-red">此操作不可逆！</span>
+            </p>
+            <label class="am-field">
+              <span class="am-label">请输入当前密码以确认 · PASSWORD</span>
+              <input type="password" id="am-del-pass" placeholder="输入密码" autocomplete="off">
+            </label>
+            <button class="am-del-btn" id="am-del-btn">
+              <span class="am-del-btn-text">永久注销 · DELETE ACCOUNT</span>
+            </button>
+            <div class="am-del-error" id="am-del-error" style="display:none"></div>
+          </div>
+        </div>
+        <div class="am-tabpane" data-tabpane="favorites">
+          <div id="am-fav-list" style="display:grid;gap:8px;"></div>
+        </div>
+        <div class="am-tabpane" data-tabpane="reading">
+          <div id="am-read-list" style="display:grid;gap:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data/manifest.js"></script>
+<script src="data/merged.js"></script>
+<!-- 返回顶部按钮 -->
+<button class="back-to-top" id="back-to-top" title="返回顶部" aria-label="返回顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script src="app.js?v=17"></script>
+
+</body>
+</html>

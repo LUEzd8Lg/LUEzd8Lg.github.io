@@ -1,0 +1,27 @@
+{
+  "name": "worldview-archive-server",
+  "version": "1.1.0",
+  "description": "Worldview Archive 后端：短信/邮件验证码 + 注册登录 + 投稿审核 + 管理员后台 + DOCX 解析",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.8.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.14"
+  },
+  "optionalDependencies": {
+    "@alicloud/dysmsapi20170525": "^2.0.24",
+    "@alicloud/openapi-client": "^0.4.11",
+    "@alicloud/tea-util": "^1.4.9"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
