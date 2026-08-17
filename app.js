@@ -174,7 +174,17 @@
     grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
     trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"/></svg>',
-    cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18,10h-1.26A8,8,0,1,0,9,20h9a5,5,0,0,0,0-10Z"/></svg>'
+    cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18,10h-1.26A8,8,0,1,0,9,20h9a5,5,0,0,0,0-10Z"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12,20h9"/><path d="M16.5,3.5a2.1,2.1,0,0,1,3,3L7,19l-4,1,1-4Z"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7,11V7a5,5,0,0,1,10,0v4"/></svg>',
+    book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4,19.5A2.5,2.5,0,0,1,6.5,17H20"/><path d="M6.5,2H20v20H6.5A2.5,2.5,0,0,1,4,19.5v-15A2.5,2.5,0,0,1,6.5,2Z"/></svg>',
+    heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84,4.61a5.5,5.5,0,0,0-7.78,0L12,5.67l-1.06-1.06a5.5,5.5,0,0,0-7.78,7.78l1.06,1.06L12,21.23l7.78-7.78,1.06-1.06a5.5,5.5,0,0,0,0-7.78Z"/></svg>',
+    heartFill: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84,4.61a5.5,5.5,0,0,0-7.78,0L12,5.67l-1.06-1.06a5.5,5.5,0,0,0-7.78,7.78l1.06,1.06L12,21.23l7.78-7.78,1.06-1.06a5.5,5.5,0,0,0,0-7.78Z"/></svg>',
+    reply: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,17 4,12 9,7"/><path d="M20,18v-2a4,4,0,0,0-4-4H4"/></svg>',
+    arrowRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>',
+    list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    audio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
   };
   function ico(name, size) {
     const s = size || 14;
@@ -237,7 +247,7 @@
       const all = Comments._all();
       return (all[Comments._k(cat, id)] || []).sort((a, b) => a.at - b.at);
     },
-    add(cat, id, text) {
+    add(cat, id, text, replyTo) {
       if (!text || !text.trim()) return null;
       const all = Comments._all();
       const k = Comments._k(cat, id);
@@ -249,7 +259,9 @@
         authorLevel: (a && a.lvl) || 'LV.1',
         text: text.trim(),
         at: Date.now(),
-        deleted: false
+        deleted: false,
+        replyTo: replyTo || null,
+        likes: []
       };
       list.push(c);
       all[k] = list;
@@ -269,6 +281,22 @@
       all[k] = list;
       Comments._save(all);
       Bus.emit('comments:changed', { cat, id, removed: cid });
+      return true;
+    },
+    toggleLike(cat, id, cid) {
+      const all = Comments._all();
+      const k = Comments._k(cat, id);
+      const list = all[k] || [];
+      const idx = list.findIndex(c => c.id === cid);
+      if (idx < 0) return false;
+      if (!list[idx].likes) list[idx].likes = [];
+      const user = (Auth.get() && Auth.get().user) || '匿名';
+      const li = list[idx].likes.indexOf(user);
+      if (li >= 0) list[idx].likes.splice(li, 1);
+      else list[idx].likes.push(user);
+      all[k] = list;
+      Comments._save(all);
+      Bus.emit('comments:changed', { cat, id, liked: cid });
       return true;
     }
   };
@@ -300,17 +328,27 @@
   // ============ 主题切换 ============
   const Theme = {
     KEY: THEME_KEY,
+    CYCLE: ['dark', 'light', 'holo'],
     get() { return localStorage.getItem(THEME_KEY) || 'dark'; },
     set(t) {
-      const v = t === 'light' ? 'light' : 'dark';
+      const v = Theme.CYCLE.includes(t) ? t : 'dark';
       localStorage.setItem(THEME_KEY, v);
-      document.documentElement.classList.toggle('theme-light', v === 'light');
+      Theme._apply(v);
       Bus.emit('theme:changed', v);
       return v;
     },
+    next() {
+      const cur = Theme.get();
+      const idx = Theme.CYCLE.indexOf(cur);
+      return Theme.set(Theme.CYCLE[(idx + 1) % Theme.CYCLE.length]);
+    },
+    _apply(v) {
+      const root = document.documentElement;
+      root.classList.toggle('theme-light', v === 'light');
+      root.classList.toggle('theme-holo', v === 'holo');
+    },
     init() {
-      const t = Theme.get();
-      document.documentElement.classList.toggle('theme-light', t === 'light');
+      Theme._apply(Theme.get());
     }
   };
 
@@ -585,11 +623,11 @@
       const body = Object.assign({}, payload);
       const r = await API._fetch('/api/submit', { method:'POST', body });
       if (r._fetchError) {
-        // 降级：localStorage 投稿
         if (!Auth.canSubmit()) return { ok:false, msg:'需 LV.2 以上权限' };
         if (!payload.title || !payload.body) return { ok:false, msg:'标题和正文必填' };
         const saved = Submissions.add(payload);
-        return { ok:true, fallback:true, submission: saved };
+        const ghResult = await pushSubmissionToGitHub(saved);
+        return { ok:true, fallback:true, submission: saved, github: ghResult };
       }
       return r;
     },
@@ -605,12 +643,17 @@
           credentials: 'same-origin',
           body: data
         });
+        const ct = res.headers.get('content-type') || '';
+        // 静态服务器（GitHub Pages）返回非 JSON 或非 2xx → 降级到浏览器端 mammoth.js
+        if (!ct.includes('application/json') || !res.ok) {
+          return await API._docxFallbackBrowser(file);
+        }
         const json = await res.json().catch(() => ({}));
         json._httpStatus = res.status;
         if (json.ok) return json;
-        // 后端不通 → 前端 mammoth.js 浏览器端降级解析
-        if (!window.__mammothFailed && !json._fetchError && res.status !== 404) return json;
-        return await API._docxFallbackBrowser(file);
+        // 后端返回错误 JSON → 也降级到浏览器端解析
+        if (!window.__mammothFailed) return await API._docxFallbackBrowser(file);
+        return json;
       } catch (e) {
         return await API._docxFallbackBrowser(file);
       }
@@ -638,6 +681,31 @@
         const reader = new FileReader();
         reader.onload = () => resolve({ ok: true, url: reader.result, fallback: true });
         reader.onerror = () => resolve({ ok: false, msg: '图片读取失败' });
+        reader.readAsDataURL(file);
+      });
+    },
+    async uploadAudio(file) {
+      const MAX_SIZE = 15 * 1024 * 1024;
+      if (file.size > MAX_SIZE) return { ok: false, msg: '音频文件过大（限制 15MB）' };
+      try {
+        const data = new FormData();
+        data.append('audio', file);
+        const headers = Object.assign({}, API._authHeaders());
+        const res = await fetch('/api/submit/upload-audio', {
+          method: 'POST',
+          headers,
+          credentials: 'same-origin',
+          body: data
+        });
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          if (json.ok && json.url) return { ok: true, url: json.url, fallback: false };
+        }
+      } catch (e) { /* 降级 base64 */ }
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ ok: true, url: reader.result, fallback: true });
+        reader.onerror = () => resolve({ ok: false, msg: '音频读取失败' });
         reader.readAsDataURL(file);
       });
     },
@@ -717,7 +785,7 @@
       if (r._fetchError) return API._adminLocalFallback('subs', { status, category });
       return r;
     },
-    async adminReview(subId, status, { note = '', patch = null } = {}) {
+    async adminReview(subId, status, { note = '', patch = null, githubFile = null, githubSha = null } = {}) {
       const r = await API._adminFetch(`/api/admin/submissions/${encodeURIComponent(subId)}/review`, {
         method:'POST',
         body: { status, note, patch }
@@ -729,7 +797,37 @@
           reviewNote: note || '',
           reviewedAt: Date.now()
         });
-        if (!updated) return { ok:false, msg:'未找到投稿' };
+        if (!updated) {
+          // GitHub投稿不在localStorage中，直接处理
+          if (githubFile) {
+            let mergedEntry = null;
+            if (status === 'approved' && patch) {
+              const cat = patch.category || 'anomalies';
+              const entry = {
+                id: patch.id || subId,
+                title: patch.title || '',
+                class: patch.class || 'neutral',
+                code: patch.code || '',
+                summary: patch.summary || '',
+                body: patch.body || '',
+                content: patch.body || '',
+                tags: patch.tags || [],
+                source: patch.source || '',
+                img: patch.cover || '',
+                audio: patch.audio || ''
+              };
+              LocalEntries.add(cat, entry);
+              mergedEntry = { ...entry, cat };
+            }
+            AdminLogs.record(status === 'approved' ? 'submission:approve' : 'submission:reject',
+              `${subId} · GitHub投稿${note ? ' · 备注:' + note : ''}`);
+            Bus.emit('submissions:reviewed', { id: subId, status, note });
+            Bus.emit('stats:refresh');
+            Bus.emit('data:changed');
+            return { ok:true, fallback:true, githubSubmission: true, mergedEntry };
+          }
+          return { ok:false, msg:'未找到投稿' };
+        }
         // 如果通过审核，把投稿内容作为新档案加入对应分类
         let mergedEntry = null;
         if (status === 'approved' && patch) {
@@ -738,12 +836,14 @@
             id: patch.id || updated.id,
             title: patch.title || updated.title,
             class: patch.class || updated.class || 'neutral',
+            code: patch.code || updated.code || '',
             summary: patch.summary || updated.summary || '',
             body: patch.body || updated.body || '',
             content: patch.body || updated.body || '',
             tags: patch.tags || updated.tags || [],
             source: patch.source || updated.source || '',
-            img: patch.cover || updated.cover || ''
+            img: patch.cover || updated.cover || '',
+            audio: patch.audio || updated.audio || ''
           };
           LocalEntries.add(cat, entry);
           mergedEntry = { ...entry, cat };
@@ -753,6 +853,7 @@
           `${subId} · ${updated.title || ''}${note ? ' · 备注:' + note : ''}`);
         Bus.emit('submissions:reviewed', { id: subId, status, note });
         Bus.emit('stats:refresh');
+        Bus.emit('data:changed');
         return { ok:true, fallback:true, submission: updated, mergedEntry };
       }
       if (r.ok) {
@@ -1111,6 +1212,10 @@
     const admin = document.querySelector('.nav-admin-link');
     if (admin) admin.style.display = Auth.isAdmin() ? 'inline-block' : 'none';
 
+    // 我的账户入口：所有登录用户可见
+    const accLink = document.querySelector('.sidebar-account-link');
+    if (accLink) accLink.style.display = Auth.get() ? 'flex' : 'none';
+
     // 同步侧边栏统计与管理员入口
     refreshSidebarStats();
   }
@@ -1224,7 +1329,7 @@
     const btn = document.getElementById('account-btn');
     if (btn && !btn.dataset.bound) {
       btn.dataset.bound = '1';
-      btn.addEventListener('click', openAccountModal);
+      btn.addEventListener('click', () => { location.hash = '#/account'; });
     }
     const close = document.getElementById('am-close');
     if (close && !close.dataset.bound) {
@@ -1321,6 +1426,80 @@
     const gate = document.getElementById('login-gate');
     if (gate) gate.style.display = 'none';
     cancelAnimationFrame(LG.raf);
+    initSiteHUD();
+  }
+
+  // === Site HUD — 登录动画风格延续到网站内部 ===
+  let _siteHUDInit = false;
+  let _siteHUDTimer = null;
+
+  function initSiteHUD() {
+    if (_siteHUDInit) return;
+    _siteHUDInit = true;
+
+    const body = document.body;
+    body.classList.add('hud-active');
+
+    // 1. CRT 扫描线叠加层
+    const crt = document.createElement('div');
+    crt.className = 'site-crt-overlay';
+    body.appendChild(crt);
+
+    // 2. 暗角
+    const vig = document.createElement('div');
+    vig.className = 'site-vignette';
+    body.appendChild(vig);
+
+    // 3. HUD 四角框
+    ['tl','tr','bl','br'].forEach(pos => {
+      const c = document.createElement('div');
+      c.className = 'site-hud-corner ' + pos;
+      body.appendChild(c);
+    });
+
+    // 4. 顶部遥测条
+    const tel = document.createElement('div');
+    tel.className = 'site-telemetry';
+    const metrics = [
+      { label: 'CPU', base: 35, range: 25 },
+      { label: 'MEM', base: 48, range: 18 },
+      { label: 'NET', base: 22, range: 30 },
+      { label: 'I/O', base: 15, range: 20 },
+      { label: 'THR', base: 62, range: 15 },
+    ];
+    tel.innerHTML = metrics.map(m =>
+      `<span class="st-item">${m.label}<span class="st-bar"><span class="st-bar-fill" data-m="${m.label}" style="width:${m.base}%"></span></span><span class="st-val" data-v="${m.label}">${m.base}%</span></span>`
+    ).join('');
+    body.appendChild(tel);
+
+    // 5. 底部状态条
+    const st = document.createElement('div');
+    st.className = 'site-status';
+    const auth = Auth.get();
+    const sid = 'SID-' + Math.random().toString(36).slice(2, 10).toUpperCase();
+    const coord = `${(Math.random()*180-90).toFixed(2)}°N ${(Math.random()*360-180).toFixed(2)}°E`;
+    const buildId = 'BLD-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+    st.innerHTML = [
+      `COORD ${coord}`,
+      `ENC AES-256-GCM`,
+      `CH TLS-1.3/X25519`,
+      `SID ${sid}`,
+      `BUILD ${buildId}`,
+    ].map((s, i, arr) => i < arr.length - 1 ? `<span>${s}</span><span class="ss-sep">·</span>` : `<span>${s}</span>`).join('');
+    body.appendChild(st);
+
+    // 6. 遥测数据实时更新
+    const tick = () => {
+      metrics.forEach(m => {
+        const val = Math.round(m.base + (Math.random() - 0.5) * m.range);
+        const clamped = Math.max(1, Math.min(99, val));
+        const bar = tel.querySelector(`[data-m="${m.label}"]`);
+        const valEl = tel.querySelector(`[data-v="${m.label}"]`);
+        if (bar) bar.style.width = clamped + '%';
+        if (valEl) valEl.textContent = clamped + '%';
+      });
+    };
+    _siteHUDTimer = setInterval(tick, 1200);
   }
 
   function startLoginParticles() {
@@ -1398,7 +1577,6 @@
     const lvl = (auth && auth.lvl) || 'LV.1';
     const isAdmin = auth && auth.role === 'admin';
 
-    // 如果已存在则先移除
     const old = document.getElementById('boot-sequence');
     if (old) old.remove();
 
@@ -1406,25 +1584,263 @@
     overlay.id = 'boot-sequence';
     document.body.appendChild(overlay);
 
+    // ---- 数据流背景（多层：十六进制 + 二进制 + 数据包） ----
+    const rain = document.createElement('canvas');
+    rain.id = 'boot-data-rain';
+    overlay.appendChild(rain);
+    const rctx = rain.getContext('2d');
+    let raf2 = 0;
+    const HEX = '0123456789ABCDEF';
+    const BIN = '01';
+    const FS = 12;
+    let cols = [];
+    let packets = [];
+    function initRain() {
+      rain.width = window.innerWidth;
+      rain.height = window.innerHeight;
+      const n = Math.floor(rain.width / (FS * 1.5));
+      cols = Array.from({length: n}, () => ({
+        y: Math.random() * rain.height,
+        sp: 0.3 + Math.random() * 2.0,
+        ch: Array.from({length: 20}, () => {
+          const r = Math.random();
+          if (r < 0.7) return HEX[Math.floor(Math.random() * HEX.length)];
+          if (r < 0.9) return BIN[Math.floor(Math.random() * BIN.length)];
+          return ['/', '\\', '|', '*', '+', '-', '>', '<'][Math.floor(Math.random() * 8)];
+        }),
+        bright: Math.random() < 0.15
+      }));
+      packets = [];
+    }
+    function spawnPacket() {
+      if (packets.length > 5) return;
+      packets.push({
+        x: Math.random() * rain.width,
+        y: -20,
+        sp: 3 + Math.random() * 4,
+        txt: '0x' + Array.from({length: 8}, () => HEX[Math.floor(Math.random() * HEX.length)]).join(''),
+        life: 1
+      });
+    }
+    function drawRain() {
+      rctx.fillStyle = 'rgba(0,0,0,0.07)';
+      rctx.fillRect(0, 0, rain.width, rain.height);
+      rctx.font = FS + 'px monospace';
+      const cw = FS * 1.5;
+      for (let i = 0; i < cols.length; i++) {
+        const c = cols[i];
+        for (let j = 0; j < c.ch.length; j++) {
+          const y = c.y - j * FS;
+          if (y < 0 || y > rain.height) continue;
+          const fade = (1 - j / c.ch.length);
+          const alpha = c.bright ? fade * 0.3 : fade * 0.1;
+          rctx.fillStyle = 'rgba(200,200,200,' + alpha + ')';
+          rctx.fillText(c.ch[j], i * cw, y);
+        }
+        c.y += c.sp;
+        if (c.y - c.ch.length * FS > rain.height) {
+          c.y = 0;
+          c.ch = c.ch.map(() => {
+            const r = Math.random();
+            if (r < 0.7) return HEX[Math.floor(Math.random() * HEX.length)];
+            if (r < 0.9) return BIN[Math.floor(Math.random() * BIN.length)];
+            return ['/', '\\', '|', '*', '+', '-', '>', '<'][Math.floor(Math.random() * 8)];
+          });
+          c.bright = Math.random() < 0.15;
+        }
+        if (Math.random() < 0.06) c.ch[Math.floor(Math.random() * c.ch.length)] = HEX[Math.floor(Math.random() * HEX.length)];
+      }
+      // 数据包
+      if (Math.random() < 0.04) spawnPacket();
+      rctx.font = FS + 'px monospace';
+      for (let p of packets) {
+        rctx.fillStyle = 'rgba(220,220,220,' + (p.life * 0.4) + ')';
+        rctx.fillText(p.txt, p.x, p.y);
+        p.y += p.sp;
+        p.life -= 0.008;
+      }
+      packets = packets.filter(p => p.life > 0 && p.y < rain.height + 20);
+      raf2 = requestAnimationFrame(drawRain);
+    }
+    initRain(); drawRain();
+    const onResize = () => initRain();
+    window.addEventListener('resize', onResize);
+
+    // ---- 扫描线 ----
+    const scan = document.createElement('div');
+    scan.className = 'boot-scanline';
+    overlay.appendChild(scan);
+
+    // ---- HUD 角框 ----
+    ['tl', 'tr', 'bl', 'br'].forEach(pos => {
+      const c = document.createElement('div');
+      c.className = 'boot-hud-corner ' + pos;
+      overlay.appendChild(c);
+    });
+
+    // ---- 系统信息 ----
+    const sid = 'SID-' + Math.random().toString(36).slice(2, 10).toUpperCase();
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const ts = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    const tk = 'TK-' + Math.random().toString(36).slice(2, 6).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+    const nodes = Math.floor(Math.random() * 8) + 8;
+    let records = 0;
+    try { records = statsTotal(); } catch (e) {}
+    const ip = '10.' + Math.floor(Math.random()*255) + '.' + Math.floor(Math.random()*255) + '.' + Math.floor(Math.random()*255);
+    const hash = Array.from({length: 16}, () => HEX[Math.floor(Math.random() * HEX.length)]).join('');
+    const buildId = Math.random().toString(36).slice(2, 8).toUpperCase();
+
+    // ---- 顶部遥测条 ----
+    const telemetry = document.createElement('div');
+    telemetry.className = 'boot-telemetry-top';
+    telemetry.innerHTML = `
+      <span class="bt-item"><span class="bt-label">CPU</span><span class="bt-bar"><span class="bt-bar-fill" data-tg="cpu"></span></span><span class="bt-val" data-tv="cpu">0%</span></span>
+      <span class="bt-item"><span class="bt-label">MEM</span><span class="bt-bar"><span class="bt-bar-fill" data-tg="mem"></span></span><span class="bt-val" data-tv="mem">0%</span></span>
+      <span class="bt-item"><span class="bt-label">NET</span><span class="bt-bar"><span class="bt-bar-fill" data-tg="net"></span></span><span class="bt-val" data-tv="net">0ms</span></span>
+      <span class="bt-item"><span class="bt-label">I/O</span><span class="bt-bar"><span class="bt-bar-fill" data-tg="io"></span></span><span class="bt-val" data-tv="io">0MB</span></span>
+      <span class="bt-item"><span class="bt-label">THR</span><span class="bt-val" data-tv="thr">0</span></span>
+    `;
+    overlay.appendChild(telemetry);
+
+    // 遥测数据 ticker
+    let teleRaf = 0;
+    let ioTotal = 0;
+    function tickTelemetry() {
+      const cpu = 20 + Math.floor(Math.random() * 50);
+      const mem = 35 + Math.floor(Math.random() * 40);
+      const net = 2 + Math.floor(Math.random() * 20);
+      const io = 1 + Math.floor(Math.random() * 8);
+      const thr = 40 + Math.floor(Math.random() * 30);
+      ioTotal += io;
+      const setBar = (key, pct) => {
+        const el = telemetry.querySelector('[data-tg="' + key + '"]');
+        if (el) el.style.width = pct + '%';
+      };
+      const setVal = (key, val) => {
+        const el = telemetry.querySelector('[data-tv="' + key + '"]');
+        if (el) el.textContent = val;
+      };
+      setBar('cpu', cpu); setVal('cpu', cpu + '%');
+      setBar('mem', mem); setVal('mem', mem + '%');
+      setBar('net', Math.min(100, net * 4)); setVal('net', net + 'ms');
+      setBar('io', Math.min(100, io * 10)); setVal('io', ioTotal + 'MB');
+      setVal('thr', String(thr));
+      teleRaf = setTimeout(tickTelemetry, 200);
+    }
+    tickTelemetry();
+
+    // ---- 底部状态条 ----
+    const statusBar = document.createElement('div');
+    statusBar.className = 'boot-status-bar';
+    statusBar.innerHTML = `
+      <span class="bsb-item">COORD <span class="bsb-val">${Math.floor(Math.random()*180)-90}°${Math.random()<0.5?'N':'S'} / ${Math.floor(Math.random()*360)-180}°${Math.random()<0.5?'E':'W'}</span></span>
+      <span class="bsb-item">ENC <span class="bsb-val">AES-256-GCM</span></span>
+      <span class="bsb-item">CHAN <span class="bsb-val">TLS 1.3 / CHACHA20</span></span>
+      <span class="bsb-item">GATE <span class="bsb-val">NODE-04 / A7</span></span>
+      <span class="bsb-item">BUILD <span class="bsb-val">#${buildId}</span></span>
+    `;
+    overlay.appendChild(statusBar);
+
+    // ---- 主内容区域 ----
+    const content = document.createElement('div');
+    content.className = 'boot-content';
+    overlay.appendChild(content);
+
+    // ---- ASCII 系统标识 ----
+    const asciiLogo = document.createElement('pre');
+    asciiLogo.className = 'boot-ascii-logo';
+    asciiLogo.textContent = [
+      ' ___      _ _ _ ___ _      _      ___ ___ ___ _____',
+      '| _ \\_  _| | | / __| |    /_\\ ___| _ \\ _ _/ _ \\_   _|',
+      '|  _/ || | |  \\__ \\ |__ / _ \\___ |  _/ | | (_) || |  ',
+      '|_|  \\_, |_|_|___/____/_/ \\_\\  |_| |_| |_|\\___/ |_|  ',
+      '     |__/                                            '
+    ].join('\n');
+    content.appendChild(asciiLogo);
+
+    // ---- 节点同步可视化辅助函数 ----
+    function makeNodes(count) {
+      let html = '<span class="boot-nodes">';
+      for (let i = 0; i < count; i++) {
+        html += '<span class="bn-dot"></span>';
+        if (i < count - 1) html += '<span class="bn-link"></span>';
+      }
+      html += '</span>';
+      return html;
+    }
+    function activateNodes(div, count, stepMs) {
+      return new Promise(async resolve => {
+        const dots = div.querySelectorAll('.bn-dot');
+        const links = div.querySelectorAll('.bn-link');
+        for (let i = 0; i < dots.length; i++) {
+          await _sleep(stepMs);
+          if (dots[i]) dots[i].classList.add('active');
+          if (links[i - 1]) links[i - 1].classList.add('active');
+        }
+        resolve();
+      });
+    }
+
+    // ---- 数据解析流辅助函数 ----
+    function makeDataStream(items) {
+      let html = '<div class="boot-data-stream">';
+      for (const item of items) {
+        html += `<div><span class="bds-key">${item.k}</span>: <span class="bds-${item.t || 'val'}">${item.v}</span></div>`;
+      }
+      html += '</div>';
+      return html;
+    }
+
+    // ---- ACCESS GRANTED 终章 ----
+    const accessGranted = document.createElement('div');
+    accessGranted.className = 'boot-access-granted';
+    accessGranted.innerHTML = `
+      <div class="bag-text">ACCESS GRANTED</div>
+      <div class="bag-line"></div>
+      <div class="bag-sub">WELCOME, ${user.toUpperCase()}</div>
+    `;
+    overlay.appendChild(accessGranted);
+
+    // ---- 启动序列步骤 ----
     const lines = [
-      { delay: 100,  html: '<span class="boot-prompt">&gt;</span> 初始化安全终端...' },
-      { delay: 200,  html: '<span class="boot-prompt">&gt;</span> 建立加密连接 <span class="boot-bar"><span class="boot-bar-fill"></span></span> <span class="boot-ok">100%</span>', bar: true },
-      { delay: 300,  html: '<span class="boot-prompt">&gt;</span> 生物特征扫描... <span class="boot-ok">通过</span>' },
-      { delay: 200,  decode: '身份识别', suffix: ' <span class="boot-ok">成功</span>', dur: 700 },
-      { delay: 150,  decode: '档案密钥解密', suffix: ' <span class="boot-ok">完成</span>', dur: 600 },
-      { delay: 100,  html: '<span class="boot-prompt">&gt;</span> 欢迎回来，<span class="boot-hl">' + user + '</span>' },
-      { delay: 200,  html: '<span class="boot-prompt">&gt;</span> 权限等级：<span class="boot-hl">' + lvl + '</span>' + (isAdmin ? ' <span class="boot-warn">[管理员]</span>' : '') },
-      { delay: 300,  html: '<span class="boot-prompt">&gt;</span> 正在进入档案库<span class="boot-cursor"></span>' },
+      { delay: 80,  html: '<span class="boot-sys">[SYS]</span> 世界观察档案库 · 安全终端 <span class="boot-ver">v3.12</span> <span class="boot-dim">| kernel 5.4.0-arch</span>' },
+      { delay: 60,  html: '<span class="boot-sys">[SYS]</span> <span class="boot-ip">' + sid + '</span> <span class="boot-dim">|</span> <span class="boot-dim">' + ts + '</span> <span class="boot-dim">|</span> <span class="boot-ip">' + ip + '</span>' },
+      { delay: 100, html: '<span class="boot-prompt">&gt;</span> 初始化安全终端 <span class="boot-dim">/dev/archive/tty0</span>' },
+      { delay: 140, html: '<span class="boot-prompt">&gt;</span> 建立加密连接 <span class="boot-bar"><span class="boot-bar-fill"></span></span> <span class="boot-ok">100%</span> <span class="boot-dim">TLS 1.3 / X25519</span>', bar: true },
+      { delay: 200, html: '<span class="boot-prompt">&gt;</span> 数据节点同步 ' + makeNodes(nodes) + ' <span class="boot-ok">完成</span> <span class="boot-dim">' + nodes + ' nodes online</span>', nodes: nodes },
+      { delay: 160, html: '<span class="boot-prompt">&gt;</span> 档案库索引加载 <span class="boot-bar"><span class="boot-bar-fill"></span></span> <span class="boot-ok">100%</span> <span class="boot-dim">' + records + ' records</span>', bar: true, stream: [
+        { k: 'anomalies', v: 'indexed', t: 'val' },
+        { k: 'organizations', v: 'indexed', t: 'val' },
+        { k: 'deities', v: 'indexed', t: 'val' },
+        { k: 'eras', v: 'indexed', t: 'val' },
+        { k: 'timelines', v: 'indexed', t: 'val' },
+        { k: 'total_records', v: String(records), t: 'num' },
+      ] },
+      { delay: 120, html: '<span class="boot-prompt">&gt;</span> 数据完整性校验 <span class="boot-ok">SHA-256</span> <span class="boot-dim">' + hash + '</span>' },
+      { delay: 130, html: '<span class="boot-prompt">&gt;</span> 生物特征扫描... <span class="boot-ok">通过</span> <span class="boot-dim">retina + fingerprint</span>' },
+      { delay: 170, decode: '身份识别', suffix: ' <span class="boot-ok">成功</span>', dur: 700 },
+      { delay: 140, decode: '档案密钥解密', suffix: ' <span class="boot-ok">完成</span> <span class="boot-dim">RSA-4096</span>', dur: 600 },
+      { delay: 90,  html: '<span class="boot-prompt">&gt;</span> 安全协议验证 <span class="boot-ok">AES-256-GCM</span> <span class="boot-dim">/ HMAC-SHA512</span>' },
+      { delay: 90,  html: '<span class="boot-prompt">&gt;</span> 会话令牌 <span class="boot-dim">' + tk + '</span>' },
+      { delay: 80,  html: '<span class="boot-prompt">&gt;</span> 加密通道 <span class="boot-ok">已建立</span> <span class="boot-dim">end-to-end</span>' },
+      { delay: 100, html: '<span class="boot-prompt">&gt;</span> 访问日志已记录 <span class="boot-dim">NODE-04 / GATE-A7 / ' + ts + '</span>' },
+      { delay: 120, html: '<span class="boot-prompt">&gt;</span> 欢迎回来，<span class="boot-hl">' + user + '</span> <span class="boot-dim">|</span> 权限等级 <span class="boot-hl">' + lvl + '</span>' + (isAdmin ? ' <span class="boot-warn">[ADMIN]</span>' : '') },
     ];
 
     (async () => {
       SFX.login();
+
+      // 显示 ASCII logo
+      await _sleep(100);
+      asciiLogo.classList.add('show');
+      await _sleep(300);
+
       for (const line of lines) {
         await _sleep(line.delay);
         const div = document.createElement('div');
         div.className = 'boot-line';
-        overlay.appendChild(div);
-        // 强制重排以触发过渡
+        content.appendChild(div);
         void div.offsetWidth;
         div.classList.add('show');
 
@@ -1436,28 +1852,56 @@
           const suffixSpan = document.createElement('span');
           suffixSpan.innerHTML = line.suffix || '';
           div.appendChild(suffixSpan);
-          // 解码时播放搜索音
           SFX.search();
           await _decodeText(decodeSpan, line.decode, line.dur || 600);
           SFX.hit();
         } else if (line.bar) {
+          div.innerHTML = line.html;
+          SFX.click();
           const fill = div.querySelector('.boot-bar-fill');
           if (fill) {
             await _sleep(50);
             fill.style.width = '100%';
-            await _sleep(400);
+            await _sleep(250);
           }
+          // 数据解析流
+          if (line.stream) {
+            const ds = document.createElement('div');
+            ds.innerHTML = makeDataStream(line.stream);
+            const dsEl = ds.firstChild;
+            content.appendChild(dsEl);
+            void dsEl.offsetWidth;
+            dsEl.classList.add('show');
+            await _sleep(300);
+          }
+        } else if (line.nodes) {
+          div.innerHTML = line.html;
+          SFX.click();
+          await _sleep(80);
+          await activateNodes(div, line.nodes, 60);
+          await _sleep(200);
         } else {
           div.innerHTML = line.html;
           SFX.click();
-          await _sleep(150);
+          await _sleep(80);
         }
       }
-      // 故障闪烁效果
-      overlay.classList.add('boot-glitch');
+
+      // ACCESS GRANTED 终章
+      await _sleep(200);
+      // 隐藏日志内容
+      content.style.transition = 'opacity 0.3s ease';
+      content.style.opacity = '0';
+      accessGranted.classList.add('show');
       SFX.theme();
+      await _sleep(600);
+
+      // 故障闪烁退出
+      overlay.classList.add('boot-glitch');
       await _sleep(300);
-      // 淡出
+      cancelAnimationFrame(raf2);
+      clearTimeout(teleRaf);
+      window.removeEventListener('resize', onResize);
       overlay.classList.add('boot-out');
       await _sleep(500);
       overlay.remove();
@@ -1726,15 +2170,22 @@
     btn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--text-2);font-family:var(--f-mono);font-size:9px;letter-spacing:1px;padding:0 4px;display:inline-flex;align-items:center;gap:3px;';
     const sunSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:13px;height:13px;"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="7" y2="7"/><line x1="17" y1="17" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="7" y2="17"/><line x1="17" y1="7" x2="19.1" y2="4.9"/></svg>';
     const moonSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    const holoSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M12 2 L21 7 L21 17 L12 22 L3 17 L3 7 Z"/><path d="M12 2 L12 22"/><path d="M3 7 L12 12 L21 7"/><path d="M3 17 L12 12 L21 17"/></svg>';
+    const THEME_META = {
+      dark:  { icon: moonSVG, label: '机密暗室',   title: '切换至 明亮档案室' },
+      light: { icon: sunSVG,  label: '明亮档案室', title: '切换至 全息终端' },
+      holo:  { icon: holoSVG, label: '全息终端',   title: '切换至 机密暗室' },
+    };
     const sync = () => {
-      const isLight = Theme.get() === 'light';
-      btn.innerHTML = (isLight ? sunSVG : moonSVG) + ' ' + (isLight ? '明亮档案室' : '机密暗室');
-      btn.title = isLight ? '切换至暗黑模式' : '切换至明亮档案室';
+      const t = Theme.get();
+      const m = THEME_META[t] || THEME_META.dark;
+      btn.innerHTML = m.icon + ' ' + m.label;
+      btn.title = m.title;
     };
     sync();
     Bus.on('theme:changed', sync);
     btn.addEventListener('click', () => {
-      Theme.set(Theme.get() === 'light' ? 'dark' : 'light');
+      Theme.next();
       SFX.theme();
     });
     bar.appendChild(sep); bar.appendChild(btn);
@@ -1852,6 +2303,8 @@
     else if (parts[0] === 'mindmap') renderMindMap();
     else if (parts[0] === 'submit') renderSubmit();
     else if (parts[0] === 'admin') renderAdmin();
+    else if (parts[0] === 'account') renderAccount();
+    else if (parts[0] === 'user' && parts.length >= 2) renderUserPage(decodeURIComponent(parts[1]));
     else if (parts[0] === 'entry' && parts.length >= 3) renderEntry(parts[1], decodeURIComponent(parts[2]));
     else if (CAT_MAP[parts[0]]) renderList(parts[0], query);
     else renderNotFound();
@@ -3167,9 +3620,22 @@
         </div>
       </div>` : '';
 
+    const audioField = e.audio ? `
+      <div class="detail-field detail-audio-field">
+        <div class="detail-field-label">${ico('audio',12)} 档案音频 · AUDIO FILE</div>
+        <div class="detail-audio-player">
+          <audio controls preload="metadata" src="${escapeAttr(resolveImgUrl(e.audio))}" style="width:100%"></audio>
+        </div>
+      </div>` : '';
+
     // 处理正文：注入锚点 + 生成 TOC
     const rawBody = e.body || '<p>（本条目正文尚未填充）</p>';
     const { html: bodyHtml, toc } = injectTocAnchors(imgField + rawBody + srcField);
+
+    // 阅读时间估算
+    const plainText = (rawBody || '').replace(/<[^>]+>/g, '');
+    const charCount = plainText.replace(/\s/g, '').length;
+    const readMinutes = Math.max(1, Math.round(charCount / 400));
 
     // 阅读进度恢复
     const readRec = ReadProgress.get(catId, id);
@@ -3217,10 +3683,71 @@
       </section>
     ` : '';
 
+    // 上下篇导航
+    const catEntries = getEntries(catId) || [];
+    const curIdx = catEntries.findIndex(r => String(r.id) === String(id));
+    const prevEntry = curIdx > 0 ? catEntries[curIdx - 1] : null;
+    const nextEntry = curIdx >= 0 && curIdx < catEntries.length - 1 ? catEntries[curIdx + 1] : null;
+    const entryNavHtml = `
+      <nav class="entry-nav">
+        <a class="entry-nav-item prev ${prevEntry ? '' : 'disabled'}" href="${prevEntry ? '#/entry/' + catId + '/' + encodeURIComponent(prevEntry.id) : 'javascript:void(0)'}">
+          <span class="entry-nav-label">${ico('arrowLeft',11)} 上一篇</span>
+          <span class="entry-nav-title">${prevEntry ? escapeHtml(prevEntry.title) : '已是首篇'}</span>
+        </a>
+        <a class="entry-nav-item next ${nextEntry ? '' : 'disabled'}" href="${nextEntry ? '#/entry/' + catId + '/' + encodeURIComponent(nextEntry.id) : 'javascript:void(0)'}">
+          <span class="entry-nav-label">下一篇 ${ico('arrowRight',11)}</span>
+          <span class="entry-nav-title">${nextEntry ? escapeHtml(nextEntry.title) : '已是末篇'}</span>
+        </a>
+      </nav>
+    `;
+
     // 评论区
     const me = Auth.get();
     const isAdmin = Auth.isAdmin();
     const comments = Comments.list(catId, id);
+    const myName = (me && me.user) || '匿名';
+    const topComments = comments.filter(c => !c.replyTo);
+    const repliesMap = {};
+    comments.filter(c => c.replyTo).forEach(c => {
+      (repliesMap[c.replyTo] = repliesMap[c.replyTo] || []).push(c);
+    });
+    function renderComment(c, isReply) {
+      const authorLink = c.author && c.author !== '游客'
+        ? `<a href="#/user/${encodeURIComponent(c.author)}" style="font-weight:600;color:var(--text);text-decoration:none;">${escapeHtml(c.author)}</a>`
+        : `<span style="font-weight:600;">${escapeHtml(c.author)}</span>`;
+      const likes = c.likes || [];
+      const hasLiked = likes.includes(myName);
+      const replies = repliesMap[c.id] || [];
+      return `
+        <div class="comment-card" data-cid="${escapeAttr(c.id)}" style="border:1px solid var(--border);padding:10px 12px;background:var(--bg-2);${isReply ? 'margin-left:46px;border-left:2px solid var(--border-2);' : ''}">
+          <div style="display:flex;gap:10px;">
+            ${renderAvatar(c.author, { size: isReply ? 28 : 36 })}
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+                <div style="font-family:var(--f-mono);font-size:11px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                  ${authorLink}
+                  <span style="opacity:.5;">·</span>
+                  <span style="color:var(--gold-3);">${c.authorLevel || ''}</span>
+                  ${c.author === 'admin' || c.role === 'admin' ? `<span style="opacity:.5;">·</span><span style="color:var(--red-2);">管理员</span>` : ''}
+                </div>
+                <span style="font-family:var(--f-mono);font-size:10px;color:var(--text-2);">${new Date(c.at).toLocaleString()}</span>
+              </div>
+              <div style="white-space:pre-wrap;word-break:break-word;font-family:var(--f-serif);font-size:13px;line-height:1.8;">${escapeHtml(c.text)}</div>
+              <div style="display:flex;gap:14px;align-items:center;margin-top:6px;">
+                <button type="button" class="comment-like" data-cid="${escapeAttr(c.id)}" style="background:none;border:none;color:${hasLiked?'var(--red-2)':'var(--text-2)'};cursor:pointer;font-family:var(--f-mono);font-size:10px;display:flex;align-items:center;gap:3px;padding:0;">
+                  ${hasLiked ? ico('heartFill',12) : ico('heart',12)} ${likes.length || ''}
+                </button>
+                <button type="button" class="comment-reply" data-cid="${escapeAttr(c.id)}" style="background:none;border:none;color:var(--text-2);cursor:pointer;font-family:var(--f-mono);font-size:10px;display:flex;align-items:center;gap:3px;padding:0;">
+                  ${ico('reply',12)} 回复
+                </button>
+                ${isAdmin ? `<button type="button" class="btn btn-mini comment-del" data-cid="${escapeAttr(c.id)}" style="border:1px solid var(--red);background:transparent;color:var(--red-2);padding:2px 8px;cursor:pointer;font-family:var(--f-mono);font-size:10px;">删除</button>` : ''}
+              </div>
+              <div class="reply-form-zone" data-cid="${escapeAttr(c.id)}"></div>
+            </div>
+          </div>
+          ${replies.length > 0 ? `<div style="display:grid;gap:8px;margin-top:8px;">${replies.map(r => renderComment(r, true)).join('')}</div>` : ''}
+        </div>`;
+    }
     const commentsHtml = `
       <section class="comments-section" style="margin-top:30px;border-top:1px solid var(--border);padding-top:20px;">
         <div class="sec-label" style="font-family:var(--f-mono);font-size:10px;letter-spacing:2px;color:var(--text-2);margin-bottom:12px;">${ico('pencil',12)} 档案批注 · COMMENTS（${comments.length}）</div>
@@ -3236,23 +3763,7 @@
         <div id="comment-list" class="comment-list" style="display:grid;gap:10px;">
           ${comments.length === 0
             ? `<div style="padding:20px;text-align:center;color:var(--text-2);font-family:var(--f-mono);font-size:11px;letter-spacing:1px;border:1px dashed var(--border);">${ico('pencil',12)} 尚未有批注，成为第一个批注者</div>`
-            : comments.map(c => `
-              <div class="comment-card" data-cid="${escapeAttr(c.id)}" style="border:1px solid var(--border);padding:10px 12px;background:var(--bg-2);">
-                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
-                  <div style="font-family:var(--f-mono);font-size:11px;">
-                    <span style="font-weight:600;">${escapeHtml(c.author)}</span>
-                    <span style="opacity:.5;margin:0 6px;">·</span>
-                    <span style="color:var(--gold-1);">${c.authorLevel || ''}</span>
-                    ${c.author === 'admin' || c.role === 'admin' ? `<span style="opacity:.5;margin:0 6px;">·</span><span style="color:var(--red-2);">管理员</span>` : ''}
-                  </div>
-                  <div style="display:flex;gap:8px;align-items:center;">
-                    <span style="font-family:var(--f-mono);font-size:10px;color:var(--text-2);">${new Date(c.at).toLocaleString()}</span>
-                    ${isAdmin ? `<button type="button" class="btn btn-mini comment-del" data-cid="${escapeAttr(c.id)}" style="border:1px solid var(--red-1);background:transparent;color:var(--red-1);padding:2px 8px;cursor:pointer;font-family:var(--f-mono);font-size:10px;">删除</button>` : ''}
-                  </div>
-                </div>
-                <div style="white-space:pre-wrap;word-break:break-word;font-family:var(--f-serif);font-size:13px;line-height:1.8;">${escapeHtml(c.text)}</div>
-              </div>
-            `).join('')}
+            : topComments.map(c => renderComment(c, false)).join('')}
         </div>
       </section>
     `;
@@ -3298,17 +3809,24 @@
             <button type="button" class="drb-btn" data-fs="17" title="大">A+</button>
             <button type="button" class="drb-btn" data-fs="20" title="特大">A++</button>
             <span class="drb-sep"></span>
+            <span class="read-time" id="read-time-badge">${ico('clock',11)} 约 ${readMinutes} 分钟 · ${charCount} 字</span>
+            <span class="drb-sep"></span>
             <button type="button" class="drb-btn drb-top" title="回到顶部">↑ 顶部</button>
           </div>
 
           ${readHintHtml}
 
+          ${audioField}
+
           <div style="display:grid;grid-template-columns:${toc && toc.length>1 ? 'minmax(0,1fr) 220px' : '1fr'};gap:24px;align-items:flex-start;">
             <div class="detail-body" id="detail-body">${bodyHtml}</div>
             ${toc && toc.length>1 ? `
-              <nav id="toc-nav" class="toc-nav" aria-label="章节目录" style="position:sticky;top:76px;border-left:1px solid var(--border);padding:6px 0 6px 14px;font-family:var(--f-mono);font-size:11px;line-height:1.9;">
-                <div style="letter-spacing:2px;color:var(--text-2);margin-bottom:6px;">◆ 目录</div>
-                ${toc.map(t => `<a class="toc-link" href="#${t.id}" style="display:block;color:var(--text-2);text-decoration:none;padding:2px 0;padding-left:${(Math.max(t.level,2)-2)*12}px;border-left:2px solid transparent;margin-left:-15px;padding-left:${(Math.max(t.level,2)-2)*12+13}px;">${escapeHtml(t.text)}</a>`).join('')}
+              <nav id="toc-nav" class="toc-nav" aria-label="章节目录">
+                <div class="toc-head">
+                  <span class="toc-title">◆ 目录</span>
+                  <span class="toc-count">${toc.length} 节</span>
+                </div>
+                ${toc.map(t => `<a class="toc-link" href="#${t.id}" data-level="${t.level}">${escapeHtml(t.text)}</a>`).join('')}
               </nav>
             ` : ''}
           </div>
@@ -3319,7 +3837,31 @@
           </div>
         </article>
         ${relatedHtml}
+        ${entryNavHtml}
         ${commentsHtml}
+        ${toc && toc.length > 1 ? `
+          <button class="toc-mobile-btn" id="toc-mobile-btn" title="目录" aria-label="打开目录">${ico('list',18)}</button>
+          <div class="toc-mobile-panel" id="toc-mobile-panel">
+            <div class="toc-mobile-inner">
+              <button class="toc-mobile-close" id="toc-mobile-close" aria-label="关闭目录">${ico('x',16)}</button>
+              <div class="toc-head" style="margin-bottom:12px;">
+                <span class="toc-title">◆ 目录</span>
+                <span class="toc-count">${toc.length} 节</span>
+              </div>
+              ${toc.map(t => `<a class="toc-link" href="#${t.id}" data-level="${t.level}">${escapeHtml(t.text)}</a>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+        <div class="read-float" id="read-float">
+          <div class="read-float-ring">
+            <svg viewBox="0 0 44 44" width="44" height="44">
+              <circle class="ring-bg" cx="22" cy="22" r="20"/>
+              <circle class="ring-fg" cx="22" cy="22" r="20" stroke-dasharray="125.66" stroke-dashoffset="125.66"/>
+            </svg>
+            <span class="read-float-pct" id="read-float-pct">0%</span>
+          </div>
+          <span class="read-float-label">PROGRESS</span>
+        </div>
       </div>
     `;
 
@@ -3368,11 +3910,21 @@
       const percent = Math.round((top / total) * 100);
       ReadProgress.save(catId, id, top, percent);
     };
+    const readFloat = document.getElementById('read-float');
+    const readFloatPct = document.getElementById('read-float-pct');
+    const readFloatRing = readFloat ? readFloat.querySelector('.ring-fg') : null;
+    const RING_CIRC = 2 * Math.PI * 20;
     const updateProgressBar = () => {
       const total = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       const top = Math.max(0, window.scrollY);
       const pct = Math.min(100, (top / total) * 100);
       progBar.style.width = pct + '%';
+      if (readFloat) {
+        if (top > 200) readFloat.classList.add('visible');
+        else readFloat.classList.remove('visible');
+      }
+      if (readFloatPct) readFloatPct.textContent = Math.round(pct) + '%';
+      if (readFloatRing) readFloatRing.style.strokeDashoffset = RING_CIRC * (1 - pct / 100);
     };
     updateProgressBar();
     window.addEventListener('scroll', () => {
@@ -3399,21 +3951,21 @@
       tocLinks.forEach(a => {
         a.addEventListener('click', (ev) => {
           ev.preventDefault();
-          const id = a.getAttribute('href').slice(1);
-          const tgt = document.getElementById(id);
+          const tid = a.getAttribute('href').slice(1);
+          const tgt = document.getElementById(tid);
           if (tgt) {
             const y = tgt.getBoundingClientRect().top + window.scrollY - 70;
             window.scrollTo({ top: y, behavior: 'smooth' });
-            history.replaceState(null, '', location.pathname + location.hash.split('#')[0] + '#' + id);
+            history.replaceState(null, '', location.pathname + location.hash.split('#')[0] + '#' + tid);
           }
         });
       });
       if ('IntersectionObserver' in window) {
         const idMap = new Map();
         tocLinks.forEach(a => {
-          const id = a.getAttribute('href').slice(1);
-          const t = document.getElementById(id);
-          if (t) idMap.set(id, a);
+          const tid = a.getAttribute('href').slice(1);
+          const t = document.getElementById(tid);
+          if (t) idMap.set(tid, a);
         });
         if (idMap.size) {
           rpObserver = new IntersectionObserver((entries) => {
@@ -3421,19 +3973,45 @@
               const a = idMap.get(ent.target.id);
               if (!a) return;
               if (ent.isIntersecting) {
-                tocLinks.forEach(x => { x.classList.remove('active'); x.style.borderLeftColor = 'transparent'; x.style.color = 'var(--text-2)'; });
+                document.querySelectorAll('.toc-link').forEach(x => x.classList.remove('active'));
                 a.classList.add('active');
-                a.style.borderLeftColor = 'var(--gold-1)';
-                a.style.color = 'var(--gold-1)';
               }
             });
           }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
-          idMap.forEach((a, id) => {
-            const t = document.getElementById(id);
+          idMap.forEach((a, tid) => {
+            const t = document.getElementById(tid);
             if (t) rpObserver.observe(t);
           });
         }
       }
+    }
+
+    // 移动端目录面板
+    const tocMobileBtn = document.getElementById('toc-mobile-btn');
+    const tocMobilePanel = document.getElementById('toc-mobile-panel');
+    const tocMobileClose = document.getElementById('toc-mobile-close');
+    if (tocMobileBtn && tocMobilePanel) {
+      tocMobileBtn.addEventListener('click', () => tocMobilePanel.classList.add('open'));
+    }
+    if (tocMobileClose) {
+      tocMobileClose.addEventListener('click', () => tocMobilePanel.classList.remove('open'));
+    }
+    if (tocMobilePanel) {
+      tocMobilePanel.addEventListener('click', (ev) => {
+        if (ev.target === tocMobilePanel) tocMobilePanel.classList.remove('open');
+      });
+      tocMobilePanel.querySelectorAll('.toc-link').forEach(a => {
+        a.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const tid = a.getAttribute('href').slice(1);
+          const tgt = document.getElementById(tid);
+          if (tgt) {
+            const y = tgt.getBoundingClientRect().top + window.scrollY - 70;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+          }
+          tocMobilePanel.classList.remove('open');
+        });
+      });
     }
 
     // 收藏按钮
@@ -3478,6 +4056,44 @@
         if (!confirm(`确认删除该批注？`)) return;
         Comments.remove(catId, id, cid);
         renderEntry(catId, id);
+      });
+    });
+    // 评论点赞
+    document.querySelectorAll('.comment-like').forEach(b => {
+      b.addEventListener('click', () => {
+        const cid = b.dataset.cid;
+        if (!cid) return;
+        Comments.toggleLike(catId, id, cid);
+        renderEntry(catId, id);
+      });
+    });
+    // 评论回复
+    document.querySelectorAll('.comment-reply').forEach(b => {
+      b.addEventListener('click', () => {
+        const cid = b.dataset.cid;
+        if (!cid) return;
+        const zone = document.querySelector(`.reply-form-zone[data-cid="${cid}"]`);
+        if (!zone || zone.dataset.shown === '1') return;
+        zone.dataset.shown = '1';
+        zone.innerHTML = `
+          <div style="margin-top:8px;display:grid;gap:6px;padding:8px;border:1px solid var(--border);background:var(--bg);">
+            <textarea rows="2" placeholder="回复…" style="background:var(--bg-2);border:1px solid var(--border);color:var(--text);padding:8px;font-family:var(--f-serif);font-size:12px;resize:vertical;"></textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+              <button type="button" class="reply-cancel" style="border:1px solid var(--border);background:var(--bg-2);color:var(--text-2);padding:4px 10px;cursor:pointer;font-family:var(--f-mono);font-size:10px;">取消</button>
+              <button type="button" class="reply-submit" style="border:1px solid var(--border);background:var(--bg);color:var(--text);padding:4px 10px;cursor:pointer;font-family:var(--f-mono);font-size:10px;">回复</button>
+            </div>
+          </div>`;
+        const ta = zone.querySelector('textarea');
+        const cancelBtn = zone.querySelector('.reply-cancel');
+        const submitBtn = zone.querySelector('.reply-submit');
+        if (ta) ta.focus();
+        if (cancelBtn) cancelBtn.addEventListener('click', () => { zone.innerHTML = ''; zone.dataset.shown = ''; });
+        if (submitBtn) submitBtn.addEventListener('click', () => {
+          const text = (ta ? ta.value : '').trim();
+          if (!text) return;
+          Comments.add(catId, id, text, cid);
+          renderEntry(catId, id);
+        });
       });
     });
   }
@@ -4042,10 +4658,16 @@
               </div>
               <p class="docx-hint">解析出的 <strong>标题</strong> 和 <strong>正文</strong> 会自动填入下方编辑器，DOCX 内的图片会被提取并插入正文对应位置。您可继续编辑后再提交。</p>
             </div>
-            <label class="sb-field">
-              <span class="sb-label">标题 · TITLE</span>
-              <input type="text" id="sb-title" placeholder="档案标题" required>
-            </label>
+            <div class="sb-row-2">
+              <label class="sb-field">
+                <span class="sb-label">标题 · TITLE</span>
+                <input type="text" id="sb-title" placeholder="档案标题" required>
+              </label>
+              <label class="sb-field">
+                <span class="sb-label">编号 · ID（选填）</span>
+                <input type="text" id="sb-id" placeholder="留空自动生成，如 001 / SUB-002">
+              </label>
+            </div>
             <div class="sb-row-2">
               <label class="sb-field">
                 <span class="sb-label">分类 · CATEGORY</span>
@@ -4104,7 +4726,9 @@
                   ${ico('camera',32)}
                   <input type="file" id="sb-insert-img" accept="image/*" hidden>
                 </label>
+                <button type="button" class="sb-tool" data-cmd="clearFloat" title="清除浮动（文字不再绕图）">⇩</button>
                 <span class="sb-tool-sep"></span>
+                <button type="button" class="sb-tool" data-cmd="hongyue" title="选中文字应用红月字体" style="font-family:'HongYue','Noto Serif SC',serif">红月</button>
                 <button type="button" class="sb-tool" data-cmd="removeFormat" title="清除格式">${ico('cross',12)}清除</button>
                 <span class="sb-tool-info" id="sb-img-status"></span>
               </div>
@@ -4149,6 +4773,18 @@
               <span class="sb-label">来源文件 · SOURCE</span>
               <input type="text" id="sb-source" placeholder="例：红月之下/核心档案/XXX.docx（选填）">
             </label>
+            <div class="sb-field sb-field-audio">
+              <span class="sb-label">音频附件 · AUDIO <span class="sb-label-hint">档案配音 / 录音 · 选填</span></span>
+              <div class="sb-audio-uploader">
+                <label class="sb-audio-choose">
+                  <input type="file" id="sb-audio" accept="audio/*" hidden>
+                  <span class="sb-audio-choose-icon">${ico('audio',14)}</span>
+                  <span class="sb-audio-choose-text" id="sb-audio-text">选择音频</span>
+                </label>
+                <button type="button" class="sb-audio-clear" id="sb-audio-clear" style="display:none">${ico('x',12)} 移除</button>
+              </div>
+              <p class="docx-hint">支持 MP3 / WAV / OGG / M4A，限制 15MB。上传后将在档案详情页显示播放器。</p>
+            </div>
           </div>
           <button type="submit" class="sb-submit-btn">
             <span class="sb-btn-text">${ico('save',14)} 提交投稿 · SUBMIT</span>
@@ -4186,6 +4822,7 @@
     }
     function collectFormDraft() {
       const titleEl = document.getElementById('sb-title');
+      const idEl = document.getElementById('sb-id');
       const catEl = document.getElementById('sb-category');
       const clsEl = document.getElementById('sb-class');
       const sumEl = document.getElementById('sb-summary');
@@ -4193,13 +4830,15 @@
       const srcEl = document.getElementById('sb-source');
       return {
         title: titleEl ? titleEl.value : '',
+        id: idEl ? idEl.value : '',
         category: catEl ? catEl.value : 'anomalies',
         class: clsEl ? clsEl.value : 'neutral',
         summary: sumEl ? sumEl.value : '',
         body: getBodyHTML(),
         tags: tagsEl ? tagsEl.value : '',
         source: srcEl ? srcEl.value : '',
-        cover: window.__sbCoverUrl || ''
+        cover: window.__sbCoverUrl || '',
+        audio: window.__sbAudioUrl || ''
       };
     }
     let saveT = null;
@@ -4212,7 +4851,8 @@
         if (!draft) return;
         if (!confirm('恢复草稿会覆盖当前表单的内容，确认恢复？')) return;
         const ti = document.getElementById('sb-title'); if (ti) ti.value = draft.title || '';
-        const ci = document.getElementById('sb-category'); if (ci) ci.value = draft.category || 'anomalies';
+    const di = document.getElementById('sb-id'); if (di) di.value = draft.id || '';
+    const ci = document.getElementById('sb-category'); if (ci) ci.value = draft.category || 'anomalies';
         const cc = document.getElementById('sb-class'); if (cc) cc.value = draft.class || 'neutral';
         const sm = document.getElementById('sb-summary'); if (sm) sm.value = draft.summary || '';
         const tg = document.getElementById('sb-tags'); if (tg) tg.value = draft.tags || '';
@@ -4222,6 +4862,11 @@
           const cp = document.getElementById('sb-cover-preview'); if (cp) cp.innerHTML = `<img src="${draft.cover}" alt="封面预览" style="width:100%;height:100%;object-fit:cover">`;
           const ct = document.getElementById('sb-cover-text'); if (ct) ct.textContent = '已恢复封面';
           const ccl = document.getElementById('sb-cover-clear'); if (ccl) ccl.style.display = '';
+        }
+        if (draft.audio) {
+          window.__sbAudioUrl = draft.audio;
+          const at = document.getElementById('sb-audio-text'); if (at) at.textContent = '已恢复音频';
+          const acl = document.getElementById('sb-audio-clear'); if (acl) acl.style.display = '';
         }
         setBodyHTML(draft.body || '');
         syncPreview();
@@ -4385,6 +5030,24 @@
         bodyEditor.focus();
         const cmd = btn.dataset.cmd;
         if (!cmd) return;
+        if (cmd === 'hongyue') {
+          const sel = window.getSelection();
+          if (!sel.rangeCount || sel.isCollapsed) { banner('请先选中文字', 'err'); return; }
+          const range = sel.getRangeAt(0);
+          const span = document.createElement('span');
+          span.className = 'font-hy';
+          span.appendChild(range.extractContents());
+          range.insertNode(span);
+          sel.removeAllRanges();
+          syncPreview();
+          return;
+        }
+        if (cmd === 'clearFloat') {
+          document.execCommand('insertHTML', false, '<div style="clear:both;height:0"></div>');
+          syncPreview();
+          scheduleDraftSave();
+          return;
+        }
         const val = btn.dataset.val || null;
         try {
           document.execCommand(cmd, false, val);
@@ -4415,7 +5078,7 @@
           // 在光标位置插入 <img>（contenteditable）
           if (bodyEditor) {
             bodyEditor.focus();
-            const tag = `<img src="${r.url}" alt="${escapeAttr(file.name)}" style="max-width:100%;border:1px solid rgba(232,232,232,0.2);margin:8px 0"><br>`;
+            const tag = `<img src="${r.url}" alt="${escapeAttr(file.name)}" style="border:1px solid rgba(232,232,232,0.2);margin:8px 0"><br>`;
             document.execCommand('insertHTML', false, tag);
             syncPreview();
           }
@@ -4425,6 +5088,153 @@
           if (imgStatus) { imgStatus.innerHTML = ico('warn',12)+' ' + (e.message || '异常'); imgStatus.className = 'sb-tool-info err'; }
         }
         imgInput.value = '';
+      });
+    }
+
+    // 图片拖拽排版
+    if (bodyEditor && !bodyEditor.dataset.imgAlignBound) {
+      bodyEditor.dataset.imgAlignBound = '1';
+      let draggedImg = null;
+      let alignBar = null;
+
+      function bindDraggableImgs() {
+        bodyEditor.querySelectorAll('img:not([draggable])').forEach(img => {
+          img.setAttribute('draggable', 'true');
+        });
+      }
+      bindDraggableImgs();
+      new MutationObserver(() => bindDraggableImgs()).observe(bodyEditor, { childList: true, subtree: true });
+
+      function hideAlignBar() {
+        if (alignBar) { alignBar.remove(); alignBar = null; }
+      }
+
+      function showAlignBar(img) {
+        hideAlignBar();
+        alignBar = document.createElement('div');
+        alignBar.className = 'img-align-bar';
+        const aligns = [
+          { cls: '', label: '内联', icon: '▬' },
+          { cls: 'img-float-left', label: '左浮', icon: '↦' },
+          { cls: 'img-float-right', label: '右浮', icon: '↤' },
+          { cls: 'img-center', label: '居中', icon: '↧' },
+        ];
+        aligns.forEach(a => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'img-align-btn';
+          btn.textContent = a.icon + ' ' + a.label;
+          const isCurrent = a.cls ? img.classList.contains(a.cls) : (!img.classList.contains('img-float-left') && !img.classList.contains('img-float-right') && !img.classList.contains('img-center'));
+          if (isCurrent) btn.classList.add('active');
+          btn.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            img.classList.remove('img-float-left', 'img-float-right', 'img-center');
+            if (a.cls) img.classList.add(a.cls);
+            syncPreview();
+            scheduleDraftSave();
+            hideAlignBar();
+          });
+          alignBar.appendChild(btn);
+        });
+        // 尺寸滑块
+        const sep = document.createElement('span');
+        sep.className = 'img-align-sep';
+        alignBar.appendChild(sep);
+        const sizeLabel = document.createElement('span');
+        sizeLabel.className = 'img-size-label';
+        const curW = img.style.width || '';
+        let curPct = 100;
+        if (curW && curW.endsWith('%')) curPct = parseInt(curW);
+        sizeLabel.textContent = curPct + '%';
+        alignBar.appendChild(sizeLabel);
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.className = 'img-size-slider';
+        slider.min = 15;
+        slider.max = 100;
+        slider.value = curPct;
+        slider.addEventListener('input', (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          const v = parseInt(slider.value);
+          img.style.width = v + '%';
+          img.style.maxWidth = 'none';
+          sizeLabel.textContent = v + '%';
+          syncPreview();
+        });
+        slider.addEventListener('change', () => {
+          scheduleDraftSave();
+        });
+        slider.addEventListener('mousedown', (ev) => ev.stopPropagation());
+        alignBar.appendChild(slider);
+        const rect = img.getBoundingClientRect();
+        document.body.appendChild(alignBar);
+        alignBar.style.position = 'fixed';
+        alignBar.style.left = Math.max(8, rect.left) + 'px';
+        alignBar.style.top = (rect.top > 40 ? rect.top - 32 : rect.bottom + 4) + 'px';
+        alignBar.style.zIndex = '10000';
+      }
+
+      bodyEditor.addEventListener('click', (e) => {
+        if (e.target.tagName === 'IMG') {
+          e.preventDefault();
+          showAlignBar(e.target);
+        } else {
+          hideAlignBar();
+        }
+      });
+
+      bodyEditor.addEventListener('dragstart', (e) => {
+        if (e.target.tagName === 'IMG') {
+          draggedImg = e.target;
+          e.target.classList.add('img-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', '');
+          hideAlignBar();
+        }
+      });
+
+      bodyEditor.addEventListener('dragend', () => {
+        if (draggedImg) {
+          draggedImg.classList.remove('img-dragging');
+          draggedImg = null;
+        }
+      });
+
+      bodyEditor.addEventListener('dragover', (e) => {
+        if (draggedImg) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+        }
+      });
+
+      bodyEditor.addEventListener('drop', (e) => {
+        if (!draggedImg) return;
+        e.preventDefault();
+        const rect = bodyEditor.getBoundingClientRect();
+        const pct = (e.clientX - rect.left) / rect.width;
+        draggedImg.classList.remove('img-float-left', 'img-float-right', 'img-center');
+        if (pct < 0.35) {
+          draggedImg.classList.add('img-float-left');
+          if (!draggedImg.style.width) { draggedImg.style.width = '45%'; draggedImg.style.maxWidth = 'none'; }
+        } else if (pct > 0.65) {
+          draggedImg.classList.add('img-float-right');
+          if (!draggedImg.style.width) { draggedImg.style.width = '45%'; draggedImg.style.maxWidth = 'none'; }
+        } else {
+          draggedImg.classList.add('img-center');
+          if (!draggedImg.style.width) { draggedImg.style.width = '100%'; draggedImg.style.maxWidth = 'none'; }
+        }
+        const range = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
+        if (range && range.startContainer !== draggedImg && !draggedImg.contains(range.startContainer)) {
+          if (draggedImg.parentNode) draggedImg.parentNode.removeChild(draggedImg);
+          range.insertNode(draggedImg);
+          const sp = document.createTextNode('\u00a0');
+          draggedImg.parentNode.insertBefore(sp, draggedImg.nextSibling);
+        }
+        window.getSelection().removeAllRanges();
+        syncPreview();
+        scheduleDraftSave();
       });
     }
 
@@ -4465,6 +5275,43 @@
         coverText.textContent = '选择图片';
         coverClear.style.display = 'none';
         coverInput.value = '';
+        scheduleDraftSave();
+      });
+    }
+
+    // 音频上传
+    const audioInput = document.getElementById('sb-audio');
+    const audioText = document.getElementById('sb-audio-text');
+    const audioClear = document.getElementById('sb-audio-clear');
+    window.__sbAudioUrl = '';
+    if (audioInput && !audioInput.dataset.bound) {
+      audioInput.dataset.bound = '1';
+      audioInput.addEventListener('change', async () => {
+        const file = audioInput.files && audioInput.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('audio/')) { sbErr('仅支持音频文件'); return; }
+        audioText.textContent = '上传中…';
+        try {
+          const r = await API.uploadAudio(file);
+          if (!r.ok) { audioText.textContent = '选择音频'; sbErr(r.msg || '音频上传失败'); return; }
+          window.__sbAudioUrl = r.url;
+          audioText.textContent = file.name.length > 18 ? file.name.slice(0,16) + '…' : file.name;
+          if (audioClear) audioClear.style.display = '';
+          scheduleDraftSave();
+        } catch (e) {
+          audioText.textContent = '选择音频';
+          sbErr('音频上传失败：' + (e.message || ''));
+        }
+        audioInput.value = '';
+      });
+    }
+    if (audioClear && !audioClear.dataset.bound) {
+      audioClear.dataset.bound = '1';
+      audioClear.addEventListener('click', () => {
+        window.__sbAudioUrl = '';
+        audioText.textContent = '选择音频';
+        audioClear.style.display = 'none';
+        audioInput.value = '';
         scheduleDraftSave();
       });
     }
@@ -4536,6 +5383,7 @@
         if (!title) return sbErr('请输入标题');
         if (!bodyText) return sbErr('请输入正文');
 
+        const customId = document.getElementById('sb-id').value.trim();
         const data = {
           title,
           category: document.getElementById('sb-category').value,
@@ -4544,7 +5392,9 @@
           body: body,
           tags: document.getElementById('sb-tags').value.split(/[,，]/).map(t=>t.trim()).filter(Boolean),
           source: document.getElementById('sb-source').value.trim(),
-          cover: window.__sbCoverUrl || ''
+          cover: window.__sbCoverUrl || '',
+          audio: window.__sbAudioUrl || '',
+          id: customId || ''
         };
 
         const btn = document.querySelector('.sb-submit-btn');
@@ -4563,9 +5413,10 @@
         const ok = document.getElementById('sb-success');
         const savedId = (r.submission && r.submission.id) || '新档案';
         const where = r.fallback ? '本地审核队列' : '服务器审核队列';
+        const ghStatus = r.github ? (r.github.ok ? ' · 已同步至 GitHub' : ' · GitHub 同步失败（仅本地保存）') : '';
         ok.classList.remove('sb-info');
         ok.innerHTML = `
-          <span>${ico('check',14)} 投稿已收妥 · 编号 <strong>${savedId}</strong> · 已进入${where}，等待管理员审核后再发布</span>
+          <span>${ico('check',14)} 投稿已收妥 · 编号 <strong>${savedId}</strong> · 已进入${where}${ghStatus}，等待管理员审核后再发布</span>
           <button type="button" class="sb-close-btn" title="关闭通知">${ico('cross',12)}</button>
         `;
         ok.style.display = 'block';
@@ -4575,6 +5426,7 @@
         document.getElementById('sb-error').style.display = 'none';
         form.reset();
         window.__sbCoverUrl = '';
+        window.__sbAudioUrl = '';
         setBodyHTML('');
         syncPreview();
         SubmitDraft.clear();
@@ -4584,6 +5436,10 @@
         if (ct) ct.textContent = '选择图片';
         const cc = document.getElementById('sb-cover-clear');
         if (cc) cc.style.display = 'none';
+        const at = document.getElementById('sb-audio-text');
+        if (at) at.textContent = '选择音频';
+        const ac = document.getElementById('sb-audio-clear');
+        if (ac) ac.style.display = 'none';
         const dh = document.getElementById('draft-hint');
         if (dh) dh.remove();
       });
@@ -4651,6 +5507,558 @@
         } catch (_) {}
         renderSubmit();
       });
+    });
+  }
+
+  // ============ 账户详情页 ============
+  const PROFILE_KEY = 'wa_profile_v1';
+
+  const LEVEL_INFO = {
+    'LV.1': { name: '访客', en: 'VISITOR', next: 'LV.2', maxExp: 100, perms: ['浏览档案'] },
+    'LV.2': { name: '档案员', en: 'ARCHIVIST', next: 'LV.3', maxExp: 300, perms: ['浏览档案', '投稿设定'] },
+    'LV.3': { name: '研究员', en: 'RESEARCHER', next: 'LV.4', maxExp: 600, perms: ['浏览档案', '投稿设定', '高级检索'] },
+    'LV.4': { name: '复审官', en: 'REVIEWER', next: 'LV.5', maxExp: 1000, perms: ['浏览档案', '投稿设定', '高级检索', '档案复审'] },
+    'LV.5': { name: '管制官', en: 'CONTROLLER', next: null, maxExp: 9999, perms: ['浏览档案', '投稿设定', '高级检索', '档案复审', '全局管控'] },
+    'LV.9': { name: '系统管理员', en: 'ADMINISTRATOR', next: null, maxExp: 9999, perms: ['全部权限'] },
+  };
+
+  function generateArchivistCode(seed) {
+    let hash = 0;
+    const str = seed || 'guest';
+    for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '', h = Math.abs(hash);
+    for (let i = 0; i < 4; i++) { code += chars[h % chars.length]; h = Math.floor(h / chars.length); }
+    return 'ARCH-' + code;
+  }
+
+  function generateAvatarSVG(seed) {
+    let hash = 0;
+    const str = seed || 'guest';
+    for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+    const size = 5, cs = 12, total = size * cs;
+    let h = Math.abs(hash) + 1, rects = '';
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < Math.ceil(size / 2); x++) {
+        const bit = h % 2; h = Math.floor(h / 2) || (h * 7 + 3);
+        if (bit) {
+          rects += `<rect x="${x*cs}" y="${y*cs}" width="${cs}" height="${cs}" fill="currentColor"/>`;
+          if (x < Math.floor(size / 2)) rects += `<rect x="${(size-1-x)*cs}" y="${y*cs}" width="${cs}" height="${cs}" fill="currentColor"/>`;
+        }
+      }
+    }
+    return `<svg viewBox="0 0 ${total} ${total}" xmlns="http://www.w3.org/2000/svg" style="color:var(--silver-2)"><rect width="${total}" height="${total}" fill="var(--bg-inset)"/>${rects}</svg>`;
+  }
+
+  function renderAvatar(user, opts) {
+    opts = opts || {};
+    const size = opts.size || 40;
+    const clickable = opts.clickable !== false;
+    const all = Profile._all();
+    const profile = all[user || '__guest__'] || {};
+    let avatarInner;
+    if (profile.customAvatar) {
+      avatarInner = `<img src="${escapeAttr(profile.customAvatar)}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="${escapeAttr(user || 'guest')}">`;
+    } else {
+      let svg = generateAvatarSVG(profile.avatarSeed || user);
+      avatarInner = svg.replace('<svg ', '<svg width="100%" height="100%" ');
+    }
+    const style = `display:inline-flex;width:${size}px;height:${size}px;flex-shrink:0;border-radius:3px;overflow:hidden;border:1px solid var(--border-2);line-height:0;`;
+    if (clickable && user && user !== '游客') {
+      return `<a href="#/user/${encodeURIComponent(user)}" class="avatar-link" title="${escapeAttr(user)}" style="${style}cursor:pointer;">${avatarInner}</a>`;
+    }
+    return `<div style="${style}">${avatarInner}</div>`;
+  }
+
+  const Profile = {
+    _all() { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch { return {}; } },
+    _save(d) { localStorage.setItem(PROFILE_KEY, JSON.stringify(d)); },
+    get(user) {
+      const key = user || (Auth.get() && Auth.get().user) || '__guest__';
+      const all = Profile._all();
+      if (!all[key]) {
+        all[key] = { bio: '', exp: 0, createdAt: (Auth.get() && Auth.get().at) || Date.now(), archivistCode: generateArchivistCode(key), avatarSeed: key };
+        Profile._save(all);
+      }
+      return all[key];
+    },
+    update(patch) {
+      const key = (Auth.get() && Auth.get().user) || '__guest__';
+      const all = Profile._all();
+      all[key] = Object.assign(all[key] || {}, patch);
+      Profile._save(all);
+      return all[key];
+    },
+  };
+
+  function apToast(msg) {
+    let t = document.getElementById('ap-toast');
+    if (!t) { t = document.createElement('div'); t.id = 'ap-toast'; t.className = 'ap-toast'; document.body.appendChild(t); }
+    t.innerHTML = msg.replace(/\n/g, '<br>');
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 4000);
+  }
+
+  function renderAccount() {
+    if (!Auth.get()) { showLoginGate(); return; }
+    const a = Auth.get();
+    const profile = Profile.get();
+    const lvl = a.lvl || 'LV.1';
+    const info = LEVEL_INFO[lvl] || LEVEL_INFO['LV.1'];
+    const favList = Favorites.list();
+    const readList = ReadProgress.list();
+    const subs = Submissions.get().filter(s => s.author === a.user);
+    const activityExp = favList.length * 10 + readList.length * 5 + subs.length * 20;
+    const totalExp = (profile.exp || 0) + activityExp;
+    const maxExp = info.maxExp;
+    const expPct = info.next ? Math.min(100, (totalExp / maxExp) * 100) : 100;
+    const createdAt = new Date(profile.createdAt || a.at || Date.now());
+    const createdStr = createdAt.toLocaleDateString('zh-CN');
+    const days = Math.floor((Date.now() - createdAt.getTime()) / 86400000);
+    const archivistNum = String(profile.createdAt || a.at || Date.now()).slice(-4);
+
+    view.innerHTML = `
+      <div class="account-page">
+        <div class="ap-banner">
+          <div class="ap-banner-grid"></div>
+          <div class="ap-banner-content">
+            <h1 class="ap-title">档案员档案</h1>
+            <p class="ap-subtitle">PERSONNEL DOSSIER · CLASSIFIED</p>
+          </div>
+          <div class="ap-banner-code">${escapeHtml(profile.archivistCode || generateArchivistCode(a.user))}</div>
+        </div>
+        <div class="ap-layout">
+          <div class="ap-left">
+            <div class="ap-card ap-profile-card">
+              <div class="ap-avatar-wrap">
+                <div class="ap-avatar">${profile.customAvatar
+                  ? `<img src="${escapeAttr(profile.customAvatar)}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="${escapeAttr(a.user)}">`
+                  : generateAvatarSVG(profile.avatarSeed || a.user)}</div>
+                <div class="ap-avatar-ring"></div>
+                <div class="ap-avatar-actions">
+                  <button class="ap-avatar-btn" id="ap-avatar-upload-btn" title="上传自定义头像">${ico('edit', 12)}</button>
+                  ${profile.customAvatar ? `<button class="ap-avatar-btn ap-avatar-reset" id="ap-avatar-reset-btn" title="恢复默认头像">${ico('close', 12)}</button>` : ''}
+                  <input type="file" id="ap-avatar-file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none">
+                </div>
+              </div>
+              <div class="ap-profile-info">
+                <div class="ap-code">${escapeHtml(profile.archivistCode || generateArchivistCode(a.user))}</div>
+                <div class="ap-username">${escapeHtml(a.user)}</div>
+                <div class="ap-lvl-badge ap-lvl-${lvl.replace('.','')}">
+                  <span class="ap-lvl-tag">${escapeHtml(lvl)}</span>
+                  <span class="ap-lvl-name">${escapeHtml(info.name)}</span>
+                </div>
+              </div>
+              <div class="ap-profile-meta">
+                <div class="ap-meta-row"><span class="ap-meta-label">编号</span><span class="ap-meta-value">No.${escapeHtml(archivistNum)}</span></div>
+                <div class="ap-meta-row"><span class="ap-meta-label">入档日期</span><span class="ap-meta-value">${escapeHtml(createdStr)}</span></div>
+                <div class="ap-meta-row"><span class="ap-meta-label">在档天数</span><span class="ap-meta-value">${days} 天</span></div>
+                <div class="ap-meta-row"><span class="ap-meta-label">身份</span><span class="ap-meta-value">${a.guest ? '游客' : (Auth.isAdmin() ? '管理员' : '注册档案员')}</span></div>
+              </div>
+              <div class="ap-bio-section">
+                <div class="ap-bio-header">
+                  <span class="ap-bio-title">个人备注</span>
+                  <button class="ap-bio-edit" id="ap-bio-edit-btn">${ico('edit',12)} 编辑</button>
+                </div>
+                <div class="ap-bio-text" id="ap-bio-text">${escapeHtml(profile.bio || '暂无备注。点击编辑添加个人说明。')}</div>
+                <textarea class="ap-bio-input" id="ap-bio-input" style="display:none" placeholder="输入个人备注..." maxlength="200"></textarea>
+                <div class="ap-bio-actions" id="ap-bio-actions" style="display:none">
+                  <button class="ap-btn ap-btn-save" id="ap-bio-save">保存</button>
+                  <button class="ap-btn ap-btn-cancel" id="ap-bio-cancel">取消</button>
+                </div>
+              </div>
+            </div>
+            <div class="ap-card ap-stats-card">
+              <div class="ap-card-title">${ico('chart',14)} 活动统计</div>
+              <div class="ap-stats-grid">
+                <div class="ap-stat-item"><div class="ap-stat-num">${favList.length}</div><div class="ap-stat-label">收藏</div></div>
+                <div class="ap-stat-item"><div class="ap-stat-num">${readList.length}</div><div class="ap-stat-label">阅读记录</div></div>
+                <div class="ap-stat-item"><div class="ap-stat-num">${subs.length}</div><div class="ap-stat-label">投稿</div></div>
+                <div class="ap-stat-item"><div class="ap-stat-num">${totalExp}</div><div class="ap-stat-label">经验值</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="ap-right">
+            <div class="ap-card ap-perm-card">
+              <div class="ap-card-title">${ico('shield',14)} 权限等级 · CLEARANCE LEVEL</div>
+              <div class="ap-lvl-progress">
+                <div class="ap-lvl-current">
+                  <span class="ap-lvl-big">${escapeHtml(lvl)}</span>
+                  <span class="ap-lvl-en">${escapeHtml(info.en)}</span>
+                </div>
+                ${info.next ? `
+                  <div class="ap-exp-bar-wrap">
+                    <div class="ap-exp-info"><span>经验值 ${totalExp} / ${maxExp}</span><span>下一级：${escapeHtml(LEVEL_INFO[info.next].name)} (${info.next})</span></div>
+                    <div class="ap-exp-bar"><div class="ap-exp-fill" style="width:${expPct}%"></div></div>
+                  </div>` : `
+                  <div class="ap-exp-bar-wrap">
+                    <div class="ap-exp-info"><span>已达最高等级</span><span>经验值 ${totalExp}</span></div>
+                    <div class="ap-exp-bar"><div class="ap-exp-fill ap-exp-max" style="width:100%"></div></div>
+                  </div>`}
+              </div>
+              <div class="ap-perm-list">
+                ${Object.entries(LEVEL_INFO).map(([lv,li]) => {
+                  const unlocked = Auth.isLv(lv);
+                  const isCurrent = lv === lvl;
+                  return `<div class="ap-perm-row ${unlocked?'unlocked':'locked'} ${isCurrent?'current':''}">
+                    <div class="ap-perm-lv"><span class="ap-perm-lv-tag">${escapeHtml(lv)}</span><span class="ap-perm-lv-name">${escapeHtml(li.name)}</span></div>
+                    <div class="ap-perm-desc">${li.perms.join(' · ')}</div>
+                    <div class="ap-perm-status">${unlocked ? '已解锁' : '未解锁'}</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="ap-card ap-timeline-card">
+              <div class="ap-card-title">${ico('clock',14)} 活动时间线 · ACTIVITY LOG</div>
+              <div class="ap-timeline" id="ap-timeline">${renderActivityTimeline(favList, readList, subs)}</div>
+            </div>
+            <div class="ap-card ap-security-card">
+              <div class="ap-card-title">${ico('lock',14)} 安全设置 · SECURITY</div>
+              <div class="ap-sec-list">
+                ${!a.guest ? `<div class="ap-sec-row" id="ap-sec-password">
+                  <div class="ap-sec-info"><div class="ap-sec-name">修改密码</div><div class="ap-sec-desc">定期更换密码以保障账号安全</div></div>
+                  <button class="ap-btn ap-btn-action" id="ap-change-pw-btn">修改</button>
+                </div>` : ''}
+                <div class="ap-sec-row" id="ap-sec-export">
+                  <div class="ap-sec-info"><div class="ap-sec-name">导出我的数据</div><div class="ap-sec-desc">导出收藏、阅读记录、个人资料等数据</div></div>
+                  <button class="ap-btn ap-btn-action" id="ap-export-btn">导出</button>
+                </div>
+                <div class="ap-sec-row" id="ap-sec-history">
+                  <div class="ap-sec-info"><div class="ap-sec-name">会话信息</div><div class="ap-sec-desc">本次登录会话的详细信息</div></div>
+                  <button class="ap-btn ap-btn-action" id="ap-history-btn">查看</button>
+                </div>
+                ${!a.guest ? `<div class="ap-sec-row ap-sec-danger">
+                  <div class="ap-sec-info"><div class="ap-sec-name">注销账号</div><div class="ap-sec-desc">永久删除账号及所有关联数据，不可恢复</div></div>
+                  <button class="ap-btn ap-btn-danger" id="ap-delete-btn">注销</button>
+                </div>` : ''}
+              </div>
+              <div class="ap-pw-form" id="ap-pw-form" style="display:none">
+                <div class="ap-pw-row"><label>原密码</label><input type="password" id="ap-pw-old" placeholder="输入原密码"></div>
+                <div class="ap-pw-row"><label>新密码</label><input type="password" id="ap-pw-new" placeholder="至少6位"></div>
+                <div class="ap-pw-row"><label>确认新密码</label><input type="password" id="ap-pw-confirm" placeholder="再次输入新密码"></div>
+                <div class="ap-pw-actions"><button class="ap-btn ap-btn-save" id="ap-pw-submit">确认修改</button><button class="ap-btn ap-btn-cancel" id="ap-pw-cancel">取消</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    bindAccountPageEvents();
+  }
+
+  function renderUserPage(username) {
+    if (!Auth.get()) { showLoginGate(); return; }
+    const profile = Profile.get(username);
+    const all = Profile._all();
+    const isSelf = Auth.get().user === username;
+    const lvl = profile.userLevel || 'LV.1';
+    const info = LEVEL_INFO[lvl] || LEVEL_INFO['LV.1'];
+    const createdAt = new Date(profile.createdAt || Date.now());
+    const createdStr = createdAt.toLocaleDateString('zh-CN');
+    const days = Math.floor((Date.now() - createdAt.getTime()) / 86400000);
+    const archivistNum = String(profile.createdAt || Date.now()).slice(-4);
+    const subs = Submissions.get().filter(s => s.author === username);
+    const allComments = Comments._all ? Comments._all() : {};
+    let commentCount = 0;
+    const userComments = [];
+    Object.entries(allComments).forEach(([key, arr]) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach(c => {
+        if (c.author === username && !c.deleted) {
+          commentCount++;
+          const [catId, entryId] = key.split(':');
+          const cat = CAT_MAP[catId];
+          const entry = findEntry(catId, entryId);
+          userComments.push({
+            text: c.text, at: c.at, catId, entryId,
+            catName: cat ? cat.name : catId,
+            catCode: cat ? cat.code : '',
+            entryTitle: entry ? (entry.title || entry.id) : entryId
+          });
+        }
+      });
+    });
+    userComments.sort((a, b) => b.at - a.at);
+
+    const userFavs = Favorites._all()[username] || [];
+    const userReads = Object.entries(ReadProgress._all())
+      .filter(([k]) => k.startsWith(username + '|'))
+      .map(([k, v]) => {
+        const ck = k.split('|')[1] || '';
+        const [cat, eid] = ck.split(':');
+        return { cat, id: eid, ...v };
+      });
+
+    const avatarHtml = profile.customAvatar
+      ? `<img src="${escapeAttr(profile.customAvatar)}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="${escapeAttr(username)}">`
+      : generateAvatarSVG(profile.avatarSeed || username);
+
+    view.innerHTML = `
+      <div class="account-page">
+        <div class="ap-banner">
+          <div class="ap-banner-grid"></div>
+          <div class="ap-banner-content">
+            <a href="#/account" style="color:var(--text-2);font-family:var(--f-mono);font-size:11px;letter-spacing:1px;text-decoration:none;">← 返回我的账户</a>
+            <h1 class="ap-title" style="margin-top:8px;">档案员档案</h1>
+            <p class="ap-subtitle">PERSONNEL DOSSIER · ${escapeHtml(profile.archivistCode || generateArchivistCode(username))}</p>
+          </div>
+          ${isSelf ? `<div class="ap-banner-code">${escapeHtml(profile.archivistCode || generateArchivistCode(username))}</div>` : ''}
+        </div>
+        <div class="ap-layout">
+          <div class="ap-left">
+            <div class="ap-card ap-profile-card">
+              <div class="ap-avatar-wrap">
+                <div class="ap-avatar">${avatarHtml}</div>
+                <div class="ap-avatar-ring"></div>
+              </div>
+              <div class="ap-profile-info">
+                <div class="ap-code">${escapeHtml(profile.archivistCode || generateArchivistCode(username))}</div>
+                <div class="ap-username">${escapeHtml(username)}</div>
+                <div class="ap-lvl-badge ap-lvl-${lvl.replace('.','')}">
+                  <span class="ap-lvl-tag">${escapeHtml(lvl)}</span>
+                  <span class="ap-lvl-name">${escapeHtml(info.name)}</span>
+                </div>
+              </div>
+              <div class="ap-profile-meta">
+                <div class="ap-meta-row"><span class="ap-meta-label">编号</span><span class="ap-meta-value">No.${escapeHtml(archivistNum)}</span></div>
+                <div class="ap-meta-row"><span class="ap-meta-label">入档日期</span><span class="ap-meta-value">${escapeHtml(createdStr)}</span></div>
+                <div class="ap-meta-row"><span class="ap-meta-label">在档天数</span><span class="ap-meta-value">${days} 天</span></div>
+                <div class="ap-meta-row"><span class="ap-meta-label">身份</span><span class="ap-meta-value">档案员</span></div>
+              </div>
+              <div class="ap-bio-section">
+                <div class="ap-bio-header"><span class="ap-bio-title">个人备注</span></div>
+                <div class="ap-bio-text">${escapeHtml(profile.bio || '该档案员尚未添加个人备注。')}</div>
+              </div>
+            </div>
+            <div class="ap-card ap-stats-card">
+              <div class="ap-card-title">${ico('chart',14)} 活动统计</div>
+              <div class="ap-stats-grid">
+                <div class="ap-stat-item"><div class="ap-stat-num">${subs.length}</div><div class="ap-stat-label">投稿</div></div>
+                <div class="ap-stat-item"><div class="ap-stat-num">${commentCount}</div><div class="ap-stat-label">批注</div></div>
+                <div class="ap-stat-item"><div class="ap-stat-num">${days}</div><div class="ap-stat-label">在档天数</div></div>
+                <div class="ap-stat-item"><div class="ap-stat-num">${profile.exp || 0}</div><div class="ap-stat-label">经验值</div></div>
+              </div>
+            </div>
+            <div class="ap-card ap-timeline-card">
+              <div class="ap-card-title">${ico('clock',14)} 活动时间线 · ACTIVITY LOG</div>
+              <div class="ap-timeline">${renderActivityTimeline(userFavs, userReads, subs)}</div>
+            </div>
+          </div>
+          <div class="ap-right">
+            <div class="ap-card ap-perm-card">
+              <div class="ap-card-title">${ico('shield',14)} 权限等级</div>
+              <div class="ap-lvl-current">
+                <span>当前等级</span>
+                <span class="ap-lvl-big">${escapeHtml(lvl)} · ${escapeHtml(info.name)}</span>
+              </div>
+              <div class="ap-perm-list">
+                ${(info.perms||[]).map(p => `<div class="ap-perm-item"><span class="ap-perm-check">✓</span> ${escapeHtml(p)}</div>`).join('')}
+              </div>
+            </div>
+            ${subs.length > 0 ? `
+            <div class="ap-card">
+              <div class="ap-card-title">${ico('file',14)} 投稿记录（${subs.length}）</div>
+              <div style="display:grid;gap:8px;">
+                ${subs.slice(0, 10).map(s => `
+                  <div style="border:1px solid var(--border);padding:8px 10px;background:var(--bg-2);">
+                    <div style="font-family:var(--f-mono);font-size:10px;color:var(--text-2);">${escapeHtml(s.id || '')} · ${new Date(s.at).toLocaleDateString('zh-CN')}</div>
+                    <div style="font-size:12px;margin-top:2px;">${escapeHtml(s.title || '未命名')}</div>
+                    <div style="font-family:var(--f-mono);font-size:10px;margin-top:2px;">
+                      <span style="color:var(--text-2);">${escapeHtml(s.category || '')}</span>
+                      ${s.status ? ` · <span style="color:${s.status==='approved'?'var(--silver-3)':'var(--red-3)'}">${escapeHtml(s.status)}</span>` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>` : ''}
+            ${userComments.length > 0 ? `
+            <div class="ap-card">
+              <div class="ap-card-title">${ico('pencil',14)} 批注记录（${userComments.length}）</div>
+              <div style="display:grid;gap:8px;">
+                ${userComments.slice(0, 10).map(c => `
+                  <div style="border:1px solid var(--border);padding:8px 10px;background:var(--bg-2);">
+                    <div style="font-family:var(--f-mono);font-size:10px;color:var(--text-2);display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                      <a href="#/entry/${c.catId}/${encodeURIComponent(c.entryId)}" style="color:var(--text-2);text-decoration:none;">${escapeHtml(c.catCode || c.catName)} · ${escapeHtml(c.entryTitle)}</a>
+                      <span style="opacity:.5;">·</span>
+                      <span>${new Date(c.at).toLocaleDateString('zh-CN')}</span>
+                    </div>
+                    <div style="font-size:12px;margin-top:4px;white-space:pre-wrap;word-break:break-word;font-family:var(--f-serif);line-height:1.6;">${escapeHtml(c.text)}</div>
+                  </div>
+                `).join('')}
+              </div>
+              ${userComments.length > 10 ? `
+              <div id="comment-rest" style="display:none;grid-template-rows:1fr;gap:8px;margin-top:8px;">
+                ${userComments.slice(10).map(c => `
+                  <div style="border:1px solid var(--border);padding:8px 10px;background:var(--bg-2);">
+                    <div style="font-family:var(--f-mono);font-size:10px;color:var(--text-2);display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                      <a href="#/entry/${c.catId}/${encodeURIComponent(c.entryId)}" style="color:var(--text-2);text-decoration:none;">${escapeHtml(c.catCode || c.catName)} · ${escapeHtml(c.entryTitle)}</a>
+                      <span style="opacity:.5;">·</span>
+                      <span>${new Date(c.at).toLocaleDateString('zh-CN')}</span>
+                    </div>
+                    <div style="font-size:12px;margin-top:4px;white-space:pre-wrap;word-break:break-word;font-family:var(--f-serif);line-height:1.6;">${escapeHtml(c.text)}</div>
+                  </div>
+                `).join('')}
+              </div>
+              <button type="button" id="comment-expand-btn" style="margin-top:8px;width:100%;border:1px solid var(--border);background:var(--bg-2);color:var(--text-2);padding:6px;cursor:pointer;font-family:var(--f-mono);font-size:10px;letter-spacing:1px;">查看全部（${userComments.length}）</button>
+              ` : ''}
+            </div>` : ''}
+          </div>
+        </div>
+      </div>`;
+
+    const expandBtn = document.getElementById('comment-expand-btn');
+    if (expandBtn) {
+      expandBtn.addEventListener('click', () => {
+        const rest = document.getElementById('comment-rest');
+        if (!rest) return;
+        const expanded = rest.style.display !== 'none';
+        if (expanded) {
+          rest.style.display = 'none';
+          expandBtn.textContent = `查看全部（${userComments.length}）`;
+        } else {
+          rest.style.display = 'grid';
+          expandBtn.textContent = '收起';
+        }
+      });
+    }
+  }
+
+  function renderActivityTimeline(favList, readList, subs) {
+    const events = [];
+    favList.forEach(f => events.push({ type:'fav', title:f.title||f.id, at:f.at, label:'收藏' }));
+    readList.forEach(r => events.push({ type:'read', title:r.id, at:r.at, label:`阅读 ${r.offsetPct||0}%` }));
+    subs.forEach(s => events.push({ type:'submit', title:s.title||s.id, at:s.at, label:'投稿' }));
+    events.sort((a,b) => (b.at||0) - (a.at||0));
+    const top = events.slice(0, 20);
+    if (!top.length) return '<div class="ap-timeline-empty">暂无活动记录</div>';
+    return top.map(e => {
+      const dt = e.at ? new Date(e.at) : null;
+      const ds = dt ? dt.toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'}) : '--';
+      const ts = dt ? dt.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}) : '--';
+      return `<div class="ap-tl-item ap-tl-${e.type}"><div class="ap-tl-dot"></div><div class="ap-tl-content"><div class="ap-tl-label">${escapeHtml(e.label)}</div><div class="ap-tl-title">${escapeHtml(e.title)}</div><div class="ap-tl-time">${ds} ${ts}</div></div></div>`;
+    }).join('');
+  }
+
+  function bindAccountPageEvents() {
+    // 头像上传
+    const uploadBtn = document.getElementById('ap-avatar-upload-btn');
+    const fileInput = document.getElementById('ap-avatar-file');
+    const resetBtn = document.getElementById('ap-avatar-reset-btn');
+    if (uploadBtn && fileInput) {
+      uploadBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        if (file.size > 3 * 1024 * 1024) { apToast('图片不能超过 3MB'); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            const max = 200;
+            if (w > h) { if (w > max) { h *= max / w; w = max; } }
+            else { if (h > max) { w *= max / h; h = max; } }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            Profile.update({ customAvatar: dataUrl });
+            renderAccount();
+            apToast('头像已更新');
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      Profile.update({ customAvatar: '' });
+      renderAccount();
+      apToast('已恢复默认头像');
+    });
+
+    const editBtn = document.getElementById('ap-bio-edit-btn');
+    const bioText = document.getElementById('ap-bio-text');
+    const bioInput = document.getElementById('ap-bio-input');
+    const bioActions = document.getElementById('ap-bio-actions');
+    if (editBtn) editBtn.addEventListener('click', () => {
+      bioInput.value = Profile.get().bio || '';
+      bioText.style.display = 'none'; editBtn.style.display = 'none';
+      bioInput.style.display = 'block'; bioActions.style.display = 'flex'; bioInput.focus();
+    });
+    const saveBio = document.getElementById('ap-bio-save');
+    if (saveBio) saveBio.addEventListener('click', () => {
+      Profile.update({ bio: bioInput.value.trim() });
+      bioText.textContent = bioInput.value.trim() || '暂无备注。点击编辑添加个人说明。';
+      bioInput.style.display='none'; bioActions.style.display='none'; bioText.style.display='block'; editBtn.style.display='';
+      apToast('备注已保存');
+    });
+    const cancelBio = document.getElementById('ap-bio-cancel');
+    if (cancelBio) cancelBio.addEventListener('click', () => {
+      bioInput.style.display='none'; bioActions.style.display='none'; bioText.style.display='block'; editBtn.style.display='';
+    });
+
+    const changePwBtn = document.getElementById('ap-change-pw-btn');
+    const pwForm = document.getElementById('ap-pw-form');
+    if (changePwBtn) changePwBtn.addEventListener('click', () => {
+      pwForm.style.display = pwForm.style.display === 'none' ? 'block' : 'none';
+    });
+    const pwSubmit = document.getElementById('ap-pw-submit');
+    if (pwSubmit) pwSubmit.addEventListener('click', () => {
+      const oldPw = document.getElementById('ap-pw-old').value;
+      const newPw = document.getElementById('ap-pw-new').value;
+      const confirmPw = document.getElementById('ap-pw-confirm').value;
+      if (!oldPw || !newPw) { apToast('请填写完整'); return; }
+      if (newPw.length < 6) { apToast('新密码至少6位'); return; }
+      if (newPw !== confirmPw) { apToast('两次密码不一致'); return; }
+      const a = Auth.get();
+      const users = Auth.getUsers();
+      const u = users.find(u => u.contact === a.user);
+      if (!u) { apToast('用户不存在'); return; }
+      if (u.pass !== btoa(oldPw)) { apToast('原密码错误'); return; }
+      u.pass = btoa(newPw);
+      Auth.saveUsers(users);
+      pwForm.style.display = 'none';
+      ['ap-pw-old','ap-pw-new','ap-pw-confirm'].forEach(id => document.getElementById(id).value = '');
+      apToast('密码修改成功');
+    });
+    const pwCancel = document.getElementById('ap-pw-cancel');
+    if (pwCancel) pwCancel.addEventListener('click', () => { pwForm.style.display = 'none'; });
+
+    const exportBtn = document.getElementById('ap-export-btn');
+    if (exportBtn) exportBtn.addEventListener('click', () => {
+      const a = Auth.get();
+      const data = {
+        account: a.user, level: a.lvl, profile: Profile.get(),
+        favorites: Favorites.list(), readProgress: ReadProgress.list(),
+        submissions: Submissions.get().filter(s => s.author === a.user),
+        exportedAt: new Date().toISOString(),
+      };
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const el = document.createElement('a');
+      el.href = url; el.download = `archive-data-${a.user}-${Date.now()}.json`;
+      document.body.appendChild(el); el.click(); document.body.removeChild(el);
+      URL.revokeObjectURL(url);
+      apToast('数据已导出');
+    });
+
+    const historyBtn = document.getElementById('ap-history-btn');
+    if (historyBtn) historyBtn.addEventListener('click', () => {
+      const a = Auth.get();
+      const p = Profile.get();
+      const dt = new Date(a.at || Date.now());
+      const cd = new Date(p.createdAt || a.at || Date.now());
+      apToast(`本次会话: ${dt.toLocaleString('zh-CN')}\n入档日期: ${cd.toLocaleDateString('zh-CN')}\n身份: ${a.guest?'游客':(Auth.isAdmin()?'管理员':'注册档案员')}\n等级: ${a.lvl}`);
+    });
+
+    const deleteBtn = document.getElementById('ap-delete-btn');
+    if (deleteBtn) deleteBtn.addEventListener('click', () => {
+      openAccountModal('account');
+      setTimeout(() => {
+        const danger = document.querySelector('.am-danger-zone');
+        if (danger) danger.scrollIntoView({ behavior:'smooth', block:'center' });
+      }, 100);
     });
   }
 
@@ -5114,7 +6522,25 @@
         eras: DATA.eras || [],
         timelines: DATA.timelines || []
       };
-      files['data/merged.js'] = '/* AUTO-GENERATED by Worldview Archive admin panel */\nvar DATA = ' + JSON.stringify(merged, null, 2) + ';\nDATA._loaded = true;\n';
+      const mergedJs = [
+        '/* AUTO-GENERATED by Worldview Archive admin panel */',
+        '(function(){',
+        '  if(!window.ARCHIVE_DATA){window.ARCHIVE_DATA={meta:{},categories:[]};}',
+        '  var D=window.ARCHIVE_DATA;',
+        '  D.categories=' + JSON.stringify(merged.categories) + ';',
+        '  D.anomalies=' + JSON.stringify(merged.anomalies) + ';',
+        '  D.organizations=' + JSON.stringify(merged.organizations) + ';',
+        '  D.deities=' + JSON.stringify(merged.deities) + ';',
+        '  D.eras=' + JSON.stringify(merged.eras) + ';',
+        '  D.timelines=' + JSON.stringify(merged.timelines) + ';',
+        '  D.meta=D.meta||{};',
+        '  D.meta.total=D.anomalies.length+D.organizations.length+D.deities.length+D.eras.length+D.timelines.length;',
+        '  D.meta.updated=new Date().toISOString().slice(0,10);',
+        '  D._loaded=true;',
+        '})();',
+        ''
+      ].join('\n');
+      files['data/merged.js'] = mergedJs;
       return files;
     }
     function exportDataFiles() {
@@ -5173,6 +6599,103 @@
       onProgress(paths.length, paths.length, null);
       return results;
     }
+
+    async function publishSubmissionConfig(cfg) {
+      const { token, owner, repo, branch } = cfg;
+      const filePath = 'data/submissions-config.json';
+      const config = { owner, repo, branch, token, at: Date.now() };
+      const content = JSON.stringify(config, null, 2);
+      let sha = null;
+      try {
+        const shaRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (shaRes.ok) { const d = await shaRes.json(); sha = d.sha; }
+      } catch (e) {}
+      const b64 = btoa(unescape(encodeURIComponent(content)));
+      const bodyObj = { message: 'publish submission config', content: b64, branch };
+      if (sha) bodyObj.sha = sha;
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyObj)
+      });
+      return res.ok;
+    }
+
+    async function fetchSubmissionConfig() {
+      try {
+        const res = await fetch('data/submissions-config.json?v=' + Date.now());
+        if (!res.ok) return null;
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json') && !ct.includes('text/plain')) return null;
+        const text = await res.text();
+        if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) return null;
+        return JSON.parse(text);
+      } catch (e) { return null; }
+    }
+
+    async function pushSubmissionToGitHub(submission) {
+      const config = await fetchSubmissionConfig();
+      if (!config || !config.owner || !config.repo) return { ok: false, reason: 'no-config' };
+      const token = getSyncConfig().token || config.token;
+      if (!token) return { ok: false, reason: 'no-token' };
+      const { owner, repo, branch } = config;
+      const filePath = `submissions/${submission.id}.json`;
+      const content = JSON.stringify(submission, null, 2);
+      const b64 = btoa(unescape(encodeURIComponent(content)));
+      const bodyObj = { message: `submission ${submission.id}`, content: b64, branch };
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyObj)
+      });
+      return { ok: res.ok };
+    }
+
+    async function fetchGitHubSubmissions() {
+      const config = await fetchSubmissionConfig();
+      if (!config || !config.owner || !config.repo) return [];
+      const { owner, repo, branch } = config;
+      const token = getSyncConfig().token || config.token;
+      const headers = { 'Accept': 'application/vnd.github.v3+json' };
+      if (token) headers['Authorization'] = `token ${token}`;
+      try {
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/submissions?ref=${branch}`, {
+          headers
+        });
+        if (!res.ok) return [];
+        const files = await res.json();
+        if (!Array.isArray(files)) return [];
+        const results = [];
+        for (const f of files) {
+          if (!f.name.endsWith('.json')) continue;
+          try {
+            const fRes = await fetch(f.download_url);
+            const data = await fRes.json();
+            data._githubFile = f.path;
+            data._githubSha = f.sha;
+            results.push(data);
+          } catch (e) {}
+        }
+        return results;
+      } catch (e) { return []; }
+    }
+
+    async function deleteGitHubSubmission(filePath, sha) {
+      const config = await fetchSubmissionConfig();
+      if (!config) return false;
+      const token = getSyncConfig().token || config.token;
+      if (!token) return false;
+      const { owner, repo, branch } = config;
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: `remove reviewed submission`, sha, branch })
+      });
+      return res.ok;
+    }
+
     function drawSyncTab() {
       const body = document.getElementById('admin-tab-body');
       const cfg = getSyncConfig();
@@ -5232,6 +6755,10 @@
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               <button class="abtn abtn-approve" id="sync-push-btn">${ico('cloud',14)} 推送数据到 GitHub</button>
               <button class="abtn" id="sync-export-btn">${ico('save',14)} 导出数据文件到本地</button>
+              <button class="abtn" id="sync-pubsub-btn">${ico('cloud',14)} 发布投稿配置</button>
+            </div>
+            <div style="margin-top:10px;font-family:var(--f-mono);font-size:10px;color:var(--text-2);line-height:1.6;">
+              「发布投稿配置」会将仓库信息和 Token 写入 data/submissions-config.json，使投稿者提交后自动推送至 GitHub，管理员可在审核面板拉取并审核。
             </div>
             <div id="sync-progress" style="margin-top:14px;font-family:var(--f-mono);font-size:11px;color:var(--text-2);"></div>
             <div id="sync-results" style="margin-top:10px;"></div>
@@ -5255,6 +6782,30 @@
         exportDataFiles();
         SFX.export();
         banner('数据文件已下载，请替换 data/ 目录下的文件', 'ok');
+      });
+      const pubsubBtn = document.getElementById('sync-pubsub-btn');
+      if (pubsubBtn) pubsubBtn.addEventListener('click', async () => {
+        const c = getSyncConfig();
+        if (!c.token || !c.owner || !c.repo) {
+          banner('请先填写并保存 GitHub 配置', 'err');
+          return;
+        }
+        if (!confirm('发布投稿配置会将 Token 写入 data/submissions-config.json（公开文件），使所有用户都能推送投稿到 GitHub。\n\n注意：此 Token 会被公开，建议使用仅含 repo 权限的专用 Token。\n\n确认发布？')) return;
+        pubsubBtn.disabled = true;
+        pubsubBtn.textContent = '发布中...';
+        try {
+          const ok = await publishSubmissionConfig(c);
+          if (ok) {
+            SFX.login();
+            banner('投稿配置已发布到 GitHub（data/submissions-config.json）', 'ok');
+          } else {
+            banner('投稿配置发布失败，请检查 Token 权限', 'err');
+          }
+        } catch (e) {
+          banner('投稿配置发布失败：' + (e.message || '未知错误'), 'err');
+        }
+        pubsubBtn.disabled = false;
+        pubsubBtn.innerHTML = ico('cloud',14) + ' 发布投稿配置';
       });
       const pushBtn = document.getElementById('sync-push-btn');
       if (pushBtn) pushBtn.addEventListener('click', async () => {
@@ -5448,16 +6999,26 @@
       const body = document.getElementById('admin-tab-body');
       body.innerHTML = `<div class="admin-loading">加载投稿列表…</div>`;
       const r = await API.adminListSubmissions('pending', '');
-      let allSubs = r.ok ? r.list : [];
+      let localSubs = r.ok ? r.list : [];
+      // 拉取GitHub投稿
+      let ghSubs = [];
+      try { ghSubs = await fetchGitHubSubmissions(); } catch (e) {}
+      // 缓存GitHub投稿供状态筛选复用
+      let cachedGhSubs = ghSubs;
+      // 合并：GitHub投稿（不在本地） + 本地投稿
+      const localIds = new Set(localSubs.map(s => s.id));
+      const ghOnly = ghSubs.filter(s => !localIds.has(s.id));
+      let allSubs = [...ghOnly, ...localSubs];
       let subsPage = 1;
       const SUBS_PAGE_SIZE = 10;
 
       const sc = document.getElementById('admin-count-subs');
       if (sc) sc.textContent = allSubs.length;
 
+      const ghCount = ghOnly.length;
       body.innerHTML = `
         <div class="admin-toolbar">
-          <span class="admin-toolbar-note">共 ${allSubs.length} 条${r.fallback ? '（降级模式）' : ''}</span>
+          <span class="admin-toolbar-note">共 ${allSubs.length} 条${r.fallback ? '（降级模式）' : ''}${ghCount ? ` · GitHub ${ghCount} 条` : ''}</span>
           <div class="admin-filter-inline">
             <input type="text" id="admin-subs-search" placeholder="搜索标题 / 作者 / ID…" class="admin-search-input">
             <label>状态
@@ -5511,6 +7072,7 @@
                   s.status === 'approved' ? '已通过'
                   : s.status === 'rejected' ? '已退回' : '待审核'
                 }</span>
+                ${s._githubFile ? '<span class="as-status as-status-github">GitHub</span>' : ''}
               </div>
               <div class="admin-sub-meta">
                 <span>作者：${escapeHtml(s.author||'')} (${escapeHtml(s.authorLevel||'')})</span>
@@ -5522,6 +7084,7 @@
               <summary>展开正文 / 编辑补丁</summary>
               <div class="admin-sub-grid">
                 <label class="af"><span>标题（通过时使用）</span><input data-k="title" value="${escapeAttr(s.title)}"/></label>
+                <label class="af"><span>编号 ID（通过时使用，留空自动生成）</span><input data-k="id" value="${escapeAttr(s.id||'')}" placeholder="留空自动生成，如 001"/></label>
                 <div class="af af-row-2">
                   <label><span>分类</span>
                     <select data-k="category">
@@ -5551,6 +7114,15 @@
                 </div>
                 <label class="af"><span>正文（可直接修改后通过）</span>
                   <textarea data-k="body" rows="6">${escapeHtml(s.body || '')}</textarea>
+                </label>
+                <label class="af"><span>音频附件（通过时使用）</span>
+                  <div class="af-cover-wrap">
+                    <input data-k="audio" value="${escapeAttr(s.audio||'')}" placeholder="留空则无音频"/>
+                    <label class="af-cover-upload-btn">
+                      ${ico('audio',12)} 上传
+                      <input type="file" class="af-audio-file" accept="audio/*" hidden>
+                    </label>
+                  </div>
                 </label>
                 <label class="af"><span>审核备注（作者可见）</span><input data-k="note" placeholder="例：摘要描述再精炼一些"></label>
               </div>
@@ -5591,6 +7163,22 @@
               } catch (e) { banner('封面上传失败', 'err'); }
             });
           }
+          // 音频上传
+          const audioFile = card.querySelector('.af-audio-file');
+          const audioInputEl = card.querySelector('[data-k="audio"]');
+          if (audioFile && !audioFile.dataset.bound) {
+            audioFile.dataset.bound = '1';
+            audioFile.addEventListener('change', async () => {
+              const file = audioFile.files && audioFile.files[0];
+              if (!file) return;
+              if (!file.type.startsWith('audio/')) { banner('仅支持音频文件', 'err'); return; }
+              try {
+                const r = await API.uploadAudio(file);
+                if (!r.ok) { banner(r.msg || '音频上传失败', 'err'); return; }
+                if (audioInputEl) audioInputEl.value = r.url;
+              } catch (e) { banner('音频上传失败', 'err'); }
+            });
+          }
           const readPatch = () => {
             const patch = {};
             card.querySelectorAll('[data-k]').forEach(el => {
@@ -5605,19 +7193,35 @@
           if (ap) ap.addEventListener('click', async () => {
             ap.disabled = true; const t = ap.textContent; ap.textContent = '处理中…';
             const { patch, note } = readPatch();
-            const r2 = await API.adminReview(s.id, 'approved', { note, patch });
-            ap.disabled = false; ap.textContent = t;
-            if (!r2.ok) return banner(r2.msg || '通过失败', 'err');
+            const r2 = await API.adminReview(s.id, 'approved', {
+              note, patch,
+              githubFile: s._githubFile || null,
+              githubSha: s._githubSha || null
+            });
+            if (!r2.ok) { ap.disabled = false; ap.textContent = t; return banner(r2.msg || '通过失败', 'err'); }
+            // 删除GitHub上的投稿文件
+            if (s._githubFile && s._githubSha) {
+              try { await deleteGitHubSubmission(s._githubFile, s._githubSha); } catch (e) {}
+            }
             banner(`通过成功 · 已写入 ${r2.mergedEntry ? CAT_MAP[r2.mergedEntry.cat]?.name || r2.mergedEntry.cat : s.category}`, 'ok');
+            ap.disabled = false; ap.textContent = t;
             drawSubsTab();
           });
           if (rj) rj.addEventListener('click', async () => {
             rj.disabled = true; const t = rj.textContent; rj.textContent = '处理中…';
             const { note } = readPatch();
-            const r2 = await API.adminReview(s.id, 'rejected', { note });
-            rj.disabled = false; rj.textContent = t;
-            if (!r2.ok) return banner(r2.msg || '退回失败', 'err');
+            const r2 = await API.adminReview(s.id, 'rejected', {
+              note,
+              githubFile: s._githubFile || null,
+              githubSha: s._githubSha || null
+            });
+            if (!r2.ok) { rj.disabled = false; rj.textContent = t; return banner(r2.msg || '退回失败', 'err'); }
+            // 删除GitHub上的投稿文件
+            if (s._githubFile && s._githubSha) {
+              try { await deleteGitHubSubmission(s._githubFile, s._githubSha); } catch (e) {}
+            }
             banner('已退回投稿' + (note ? `（备注：${note}）` : ''), 'ok');
+            rj.disabled = false; rj.textContent = t;
             drawSubsTab();
           });
         });
@@ -5661,8 +7265,18 @@
                   else patch[k] = el.value;
                 });
               }
-              const r2 = await API.adminReview(sid, 'approved', { patch });
-              if (r2.ok) ok++; else fail++;
+              const subObj = allSubs.find(x => x.id === sid);
+              const r2 = await API.adminReview(sid, 'approved', {
+                patch,
+                githubFile: subObj?._githubFile || null,
+                githubSha: subObj?._githubSha || null
+              });
+              if (r2.ok) {
+                ok++;
+                if (subObj?._githubFile && subObj?._githubSha) {
+                  try { await deleteGitHubSubmission(subObj._githubFile, subObj._githubSha); } catch (e) {}
+                }
+              } else fail++;
             }
             batchApprove.disabled = false; batchApprove.textContent = t;
             banner(`批量通过完成 · 成功 ${ok} 条${fail ? ` · 失败 ${fail} 条` : ''}`, fail ? 'err' : 'ok');
@@ -5681,8 +7295,18 @@
             batchReject.disabled = true; const t = batchReject.textContent; batchReject.textContent = '处理中…';
             let ok = 0, fail = 0;
             for (const sid of ids) {
-              const r2 = await API.adminReview(sid, 'rejected', { note: note || '' });
-              if (r2.ok) ok++; else fail++;
+              const subObj = allSubs.find(x => x.id === sid);
+              const r2 = await API.adminReview(sid, 'rejected', {
+                note: note || '',
+                githubFile: subObj?._githubFile || null,
+                githubSha: subObj?._githubSha || null
+              });
+              if (r2.ok) {
+                ok++;
+                if (subObj?._githubFile && subObj?._githubSha) {
+                  try { await deleteGitHubSubmission(subObj._githubFile, subObj._githubSha); } catch (e) {}
+                }
+              } else fail++;
             }
             batchReject.disabled = false; batchReject.textContent = t;
             banner(`批量打回完成 · 成功 ${ok} 条${fail ? ` · 失败 ${fail} 条` : ''}`, fail ? 'err' : 'ok');
@@ -5698,11 +7322,18 @@
       document.getElementById('admin-subs-status').addEventListener('change', async () => {
         const v = document.getElementById('admin-subs-status').value;
         const res = await API.adminListSubmissions(v, '');
-        allSubs = res.ok ? res.list : [];
+        let localFiltered = res.ok ? res.list : [];
+        // GitHub投稿始终为待审核状态，仅在 pending/all 时显示
+        const localIds = new Set(localFiltered.map(s => s.id));
+        let ghToAdd = [];
+        if (v === 'pending' || v === 'all') {
+          ghToAdd = cachedGhSubs.filter(s => !localIds.has(s.id));
+        }
+        allSubs = [...ghToAdd, ...localFiltered];
         subsPage = 1;
         // 更新计数
         const noteEl = body.querySelector('.admin-toolbar-note');
-        if (noteEl) noteEl.textContent = `共 ${allSubs.length} 条${res.fallback ? '（降级模式）' : ''}`;
+        if (noteEl) noteEl.textContent = `共 ${allSubs.length} 条${res.fallback ? '（降级模式）' : ''}${ghToAdd.length ? ` · GitHub ${ghToAdd.length} 条` : ''}`;
         renderSubsPage();
       });
 
@@ -5910,6 +7541,16 @@
                 <div class="af-cover-thumb af-cover-thumb-edit">${x.img ? `<img src="${escapeAttr(resolveImgUrl(x.img))}" alt="封面" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : '<div class="af-cover-empty">无</div>'}</div>
               </label>
               <label class="af"><span>来源</span><input data-f="source" value="${escapeAttr(x.source||'')}"/></label>
+              <label class="af"><span>音频附件路径（data/audio/xxx.mp3 或上传）</span>
+                <div class="af-cover-wrap">
+                  <input data-f="audio" value="${escapeAttr(x.audio||'')}" placeholder="data/audio/xxx.mp3"/>
+                  <label class="af-cover-upload-btn">
+                    ${ico('audio',12)} 上传
+                    <input type="file" class="af-audio-file-edit" accept="audio/*" hidden>
+                  </label>
+                </div>
+                <div class="af-audio-status af-audio-status-edit">${x.audio ? `<span style="font-family:var(--f-mono);font-size:10px;color:var(--text-3)">${ico('audio',10)} 已附加音频</span>` : '<span style="font-family:var(--f-mono);font-size:10px;color:var(--text-4)">无音频</span>'}</div>
+              </label>
             </div>
             <div class="am-foot">
               <button class="abtn abtn-cancel" data-act="cancel">取消</button>
@@ -5947,6 +7588,24 @@
               if (editCoverInput) editCoverInput.value = r.url;
               if (editCoverThumb) editCoverThumb.innerHTML = `<img src="${r.url}" alt="封面" style="width:100%;height:100%;object-fit:cover">`;
             } catch (e) { banner('封面上传失败', 'err'); }
+          });
+        }
+        // 音频上传
+        const editAudioFile = dlg.querySelector('.af-audio-file-edit');
+        const editAudioInput = dlg.querySelector('[data-f="audio"]');
+        const editAudioStatus = dlg.querySelector('.af-audio-status-edit');
+        if (editAudioFile) {
+          editAudioFile.addEventListener('change', async () => {
+            const file = editAudioFile.files && editAudioFile.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('audio/')) { banner('仅支持音频文件', 'err'); return; }
+            if (editAudioStatus) editAudioStatus.innerHTML = '<span style="font-family:var(--f-mono);font-size:10px;color:var(--gold-1)">上传中…</span>';
+            try {
+              const r = await API.uploadAudio(file);
+              if (!r.ok) { banner(r.msg || '音频上传失败', 'err'); if (editAudioStatus) editAudioStatus.innerHTML = '<span style="font-family:var(--f-mono);font-size:10px;color:var(--red-2)">上传失败</span>'; return; }
+              if (editAudioInput) editAudioInput.value = r.url;
+              if (editAudioStatus) editAudioStatus.innerHTML = `<span style="font-family:var(--f-mono);font-size:10px;color:var(--gold-1)">${ico('audio',10)} 已附加（${r.fallback?'本地':'服务器'}）</span>`;
+            } catch (e) { banner('音频上传失败', 'err'); if (editAudioStatus) editAudioStatus.innerHTML = '<span style="font-family:var(--f-mono);font-size:10px;color:var(--red-2)">上传失败</span>'; }
           });
         }
         dlg.querySelector('[data-act="save"]').addEventListener('click', async () => {
@@ -6518,7 +8177,7 @@
     // 快捷操作按钮
     const themeBtn = document.getElementById('sb-theme-toggle');
     if (themeBtn) themeBtn.addEventListener('click', () => {
-      Theme.set(Theme.get() === 'light' ? 'dark' : 'light');
+      Theme.next();
       SFX.theme();
     });
 
@@ -6925,11 +8584,18 @@
         });
         _dualTone({ freq: 1175, type1: 'sine', type2: 'triangle', dur: 0.14, vol: 0.18, release: 0.15, lp: 4000, delay: 0.22, sendReverb: 0.5 });
       },
-      // 主题切换（柔和反极）
+      // 主题切换（柔和反极 / 全息）
       theme: () => {
-        const up = _ThemeLightDark();
-        _dualTone({ freq: up ? 587 : 466, type1: 'sine', type2: 'triangle', dur: 0.08, vol: 0.22, release: 0.06, lp: 3200, sendReverb: 0.3 });
-        _dualTone({ freq: up ? 880 : 349, type1: 'sine', type2: 'triangle', dur: 0.12, vol: 0.18, release: 0.1, lp: 3200, delay: 0.06, sendReverb: 0.4 });
+        const t = Theme.get();
+        if (t === 'holo') {
+          _dualTone({ freq: 659, type1: 'sine', type2: 'triangle', dur: 0.08, vol: 0.22, release: 0.06, lp: 3200, sendReverb: 0.3 });
+          _dualTone({ freq: 988, type1: 'sine', type2: 'triangle', dur: 0.12, vol: 0.18, release: 0.1, lp: 3200, delay: 0.06, sendReverb: 0.4 });
+          _dualTone({ freq: 1319, type1: 'sine', type2: 'triangle', dur: 0.16, vol: 0.14, release: 0.12, lp: 4000, delay: 0.12, sendReverb: 0.5 });
+        } else {
+          const up = t === 'light';
+          _dualTone({ freq: up ? 587 : 466, type1: 'sine', type2: 'triangle', dur: 0.08, vol: 0.22, release: 0.06, lp: 3200, sendReverb: 0.3 });
+          _dualTone({ freq: up ? 880 : 349, type1: 'sine', type2: 'triangle', dur: 0.12, vol: 0.18, release: 0.1, lp: 3200, delay: 0.06, sendReverb: 0.4 });
+        }
       },
       // 管理后台操作（柔和机械咔嗒）
       adminClick: () => {
@@ -6938,10 +8604,6 @@
       },
     };
 
-    function _ThemeLightDark() {
-      try { return (localStorage.getItem('wa_theme') || 'dark') === 'light'; }
-      catch { return false; }
-    }
     return api;
   })();
 
@@ -6951,7 +8613,11 @@
     let _masterGain = null;
     let _nodes = [];      // 所有振荡器/滤波器节点，用于停止
     let _lfoNodes = [];   // LFO 节点
-    let _bellTimer = null; // 随机钟声定时器
+    let _melodyTimer = null; // 旋律定时器
+    let _chordTimer = null;  // 和弦进行定时器
+    let _arpTimer = null;    // 琶音定时器
+    let _padOscs = [];       // pad 振荡器引用（用于和弦切换）
+    let _chordIdx = 0;       // 当前和弦索引
     let _playing = false;
     let _volume = 0.18;
     const STORAGE_KEY = 'wa_bgm_on';
@@ -6972,13 +8638,21 @@
     }
     loadPref();
 
+    let _stopCleanupTimer = null;
+    let _healthCheckTimer = null;
+
     function _getCtx() {
       const Ctx = window.AudioContext || window.webkitAudioContext;
       if (!Ctx) return null;
-      // 复用 SFX 的 AudioContext（如果已创建）
-      // 通过检测全局已有的 AudioContext
       if (!_ctx) {
-        try { _ctx = new Ctx(); } catch { return null; }
+        try {
+          _ctx = new Ctx();
+          _ctx.addEventListener('statechange', () => {
+            if (_playing && _ctx && _ctx.state === 'suspended') {
+              _ctx.resume().catch(() => {});
+            }
+          });
+        } catch { return null; }
       }
       if (_ctx.state === 'suspended') _ctx.resume().catch(() => {});
       return _ctx;
@@ -6996,7 +8670,7 @@
       // 低通滤波（让整体音色更暗沉柔和）
       const masterLP = ctx.createBiquadFilter();
       masterLP.type = 'lowpass';
-      masterLP.frequency.value = 900;
+      masterLP.frequency.value = 700;
       masterLP.Q.value = 0.4;
       masterLP.connect(_masterGain);
 
@@ -7012,13 +8686,13 @@
         osc.detune.value = (i % 2 === 0 ? 4 : -4);
 
         const g = ctx.createGain();
-        g.gain.value = 0.08 - i * 0.012;
+        g.gain.value = 0.012 - i * 0.002;
 
         // 每个 drone 有独立的慢速 LFO 调制音量（呼吸感）
         const lfo = ctx.createOscillator();
         lfo.frequency.value = 0.03 + i * 0.012; // 更慢，0.03~0.066 Hz
         const lfoGain = ctx.createGain();
-        lfoGain.gain.value = 0.025; // 调制深度减半
+        lfoGain.gain.value = 0.012; // 调制深度降低
         lfo.connect(lfoGain);
         lfoGain.connect(g.gain);
 
@@ -7030,8 +8704,9 @@
       });
 
       // === 高频泛音层（空灵氛围，极轻）===
-      // E5 = 659Hz, A5 = 880Hz, C6 = 1046Hz（A 小调和弦高八度）
-      const padFreqs = [659, 880, 1046];
+      // E4 = 329.5Hz, A4 = 440Hz, C5 = 523Hz（A 小调和弦，降低八度避免刺耳）
+      const padFreqs = [329.5, 440, 523];
+      _padOscs = [];
       padFreqs.forEach((freq, i) => {
         const osc = ctx.createOscillator();
         osc.type = 'sine';
@@ -7039,26 +8714,27 @@
         osc.detune.value = (i - 1) * 3;
 
         const g = ctx.createGain();
-        g.gain.value = 0.008; // 减半
+        g.gain.value = 0.006;
 
         // 慢速音量调制
         const lfo = ctx.createOscillator();
         lfo.frequency.value = 0.05 + i * 0.02;
         const lfoGain = ctx.createGain();
-        lfoGain.gain.value = 0.004;
+        lfoGain.gain.value = 0.003;
         lfo.connect(lfoGain);
         lfoGain.connect(g.gain);
 
         // 独立低通（更低，更柔和）
         const lp = ctx.createBiquadFilter();
         lp.type = 'lowpass';
-        lp.frequency.value = 1200;
+        lp.frequency.value = 700;
 
         osc.connect(g);
         g.connect(lp);
         lp.connect(_masterGain);
         osc.start();
         lfo.start();
+        _padOscs.push(osc);
         _nodes.push(osc, g, lfo, lfoGain, lp);
       });
 
@@ -7091,70 +8767,110 @@
       nLfo.start();
       _nodes.push(noiseSrc, noiseLP, noiseGain, nLfo, nLfoGain);
 
-      // === 随机钟声点缀 ===
-      _scheduleBell();
+      // === 旋律层 + 琶音层 + 和弦进行 ===
+      _scheduleMelody();
+      _scheduleChordChange();
+      _scheduleArp();
 
       return true;
     }
 
-    function _scheduleBell() {
+    // A 自然小调音阶（Aeolian，比五声音阶更丰富）
+    const _scale = [220, 246.9, 261.6, 293.7, 329.6, 349.2, 392, 440, 493.9, 523.3, 587.3, 659.3];
+    // 旋律模式（更长、更有起伏的乐句）
+    const _melodyPatterns = [
+      [0, 2, 4, 7, 4, 2, 0],
+      [4, 6, 8, 6, 4, 2, 0],
+      [0, 4, 7, 9, 7, 4, 2],
+      [7, 9, 11, 9, 7, 4, 2],
+      [2, 4, 6, 4, 2, 0, 4],
+      [0, 2, 4, 2, 6, 4, 2, 0],
+      [4, 7, 9, 7, 4, 2, 0, 2],
+      [9, 7, 4, 2, 0, 4, 2],
+    ];
+    // 和弦进行：Am - F - C - G (vi-IV-I-V，经典情感进行)
+    const _chords = [
+      [261.6, 329.6, 440],     // Am: C4, E4, A4
+      [261.6, 349.2, 440],     // F:  C4, F4, A4
+      [329.6, 392, 523.3],     // C:  E4, G4, C5
+      [392, 493.9, 587.3],     // G:  G4, B4, D5
+    ];
+    // 低音根音
+    const _bassNotes = [110, 87.4, 130.8, 98];
+    // 和弦对应的琶音音
+    const _arpNotes = [
+      [220, 261.6, 329.6, 440],
+      [174.6, 220, 261.6, 349.2],
+      [130.8, 164.8, 196, 261.6],
+      [196, 246.9, 293.7, 392],
+    ];
+
+    function _scheduleMelody() {
       if (!_playing) return;
-      const ctx = _getCtx();
-      if (!ctx) return;
-      // 每 15~40 秒随机一次钟声（更稀疏）
-      const delay = 15000 + Math.random() * 25000;
-      _bellTimer = setTimeout(() => {
-        _playBell();
-        _scheduleBell();
+      const delay = 4000 + Math.random() * 3000;
+      _melodyTimer = setTimeout(() => {
+        _playMelodyPhrase();
+        _scheduleMelody();
       }, delay);
     }
 
-    function _playBell() {
+    function _playMelodyPhrase() {
+      if (!_playing || !_masterGain) return;
+      const pattern = _melodyPatterns[Math.floor(Math.random() * _melodyPatterns.length)];
+      const noteDelay = 900 + Math.random() * 300;
+      pattern.forEach((idx, i) => {
+        setTimeout(() => {
+          if (_playing) _playMelodyNote(_scale[idx]);
+        }, i * noteDelay);
+      });
+    }
+
+    function _playMelodyNote(freq) {
       if (!_playing || !_masterGain) return;
       const ctx = _getCtx();
       if (!ctx) return;
-      // 只用低音区：A3=220, E4=329, A4=440, C5=523（避免高频刺耳）
-      const notes = [220, 329, 440, 523];
-      const freq = notes[Math.floor(Math.random() * notes.length)];
       const now = ctx.currentTime;
 
       const osc = ctx.createOscillator();
-      osc.type = 'sine';
+      osc.type = 'triangle';
       osc.frequency.value = freq;
 
       const osc2 = ctx.createOscillator();
       osc2.type = 'sine';
-      osc2.frequency.value = freq * 2; // 泛音
-      osc2.detune.value = 4;
+      osc2.frequency.value = freq * 2;
 
       const g = ctx.createGain();
       g.gain.setValueAtTime(0.0001, now);
-      g.gain.exponentialRampToValueAtTime(0.018, now + 0.04); // 音量减半，起音更慢
-      g.gain.exponentialRampToValueAtTime(0.0001, now + 5.0); // 更长尾
+      g.gain.linearRampToValueAtTime(0.016, now + 0.15);
+      g.gain.linearRampToValueAtTime(0.010, now + 1.0);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 4.5);
 
       const g2 = ctx.createGain();
       g2.gain.setValueAtTime(0.0001, now);
-      g2.gain.exponentialRampToValueAtTime(0.006, now + 0.04);
+      g2.gain.linearRampToValueAtTime(0.003, now + 0.15);
       g2.gain.exponentialRampToValueAtTime(0.0001, now + 3.0);
 
-      // 延迟反馈（钟声混响）
-      const delay = ctx.createDelay(1.0);
-      delay.delayTime.value = 0.22;
-      const fb = ctx.createGain();
-      fb.gain.value = 0.35; // 反馈降低
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
-      lp.frequency.value = 1800; // 更暗
+      lp.frequency.value = 1400;
+
+      const delay = ctx.createDelay(1.0);
+      delay.delayTime.value = 0.375;
+      const fb = ctx.createGain();
+      fb.gain.value = 0.35;
+      const delayGain = ctx.createGain();
+      delayGain.gain.value = 0.4;
 
       osc.connect(g);
       osc2.connect(g2);
-      g.connect(_masterGain);
-      g2.connect(_masterGain);
-      g.connect(delay);
-      delay.connect(lp);
-      lp.connect(fb);
-      fb.connect(delay);
+      g.connect(lp);
+      g2.connect(lp);
       lp.connect(_masterGain);
+      lp.connect(delay);
+      delay.connect(fb);
+      fb.connect(delay);
+      delay.connect(delayGain);
+      delayGain.connect(_masterGain);
 
       osc.start(now);
       osc2.start(now);
@@ -7162,11 +8878,133 @@
       osc2.stop(now + 3.0);
     }
 
-    function play() {
-      if (_playing) return;
+    function _scheduleChordChange() {
+      if (!_playing) return;
+      const delay = 14000 + Math.random() * 4000;
+      _chordTimer = setTimeout(() => {
+        _chordIdx = (_chordIdx + 1) % _chords.length;
+        _changeChord(_chordIdx);
+        _playBassNote(_bassNotes[_chordIdx]);
+        _scheduleChordChange();
+      }, delay);
+    }
+
+    function _changeChord(idx) {
       const ctx = _getCtx();
       if (!ctx) return;
-      if (_nodes.length === 0) {
+      const freqs = _chords[idx];
+      _padOscs.forEach((osc, i) => {
+        if (osc && freqs[i]) {
+          osc.frequency.exponentialRampToValueAtTime(freqs[i], ctx.currentTime + 3);
+        }
+      });
+    }
+
+    function _playBassNote(freq) {
+      if (!_playing || !_masterGain) return;
+      const ctx = _getCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'triangle';
+      osc2.frequency.value = freq * 2;
+
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.020, now + 0.2);
+      g.gain.linearRampToValueAtTime(0.012, now + 3.0);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 12.0);
+
+      const g2 = ctx.createGain();
+      g2.gain.setValueAtTime(0.0001, now);
+      g2.gain.linearRampToValueAtTime(0.004, now + 0.2);
+      g2.gain.exponentialRampToValueAtTime(0.0001, now + 8.0);
+
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 500;
+
+      osc.connect(g);
+      osc2.connect(g2);
+      g.connect(lp);
+      g2.connect(lp);
+      lp.connect(_masterGain);
+
+      osc.start(now);
+      osc2.start(now);
+      osc.stop(now + 12.0);
+      osc2.stop(now + 8.0);
+    }
+
+    function _scheduleArp() {
+      if (!_playing) return;
+      const delay = 2000 + Math.random() * 1500;
+      _arpTimer = setTimeout(() => {
+        _playArpPhrase();
+        _scheduleArp();
+      }, delay);
+    }
+
+    function _playArpPhrase() {
+      if (!_playing || !_masterGain) return;
+      const notes = _arpNotes[_chordIdx];
+      const dir = Math.random() > 0.5 ? 1 : -1;
+      const start = dir > 0 ? 0 : notes.length - 1;
+      const count = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < count; i++) {
+        const idx = (start + dir * i + notes.length) % notes.length;
+        setTimeout(() => {
+          if (_playing) _playArpNote(notes[idx]);
+        }, i * 350);
+      }
+    }
+
+    function _playArpNote(freq) {
+      if (!_playing || !_masterGain) return;
+      const ctx = _getCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.008, now + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 3.0);
+
+      const delay = ctx.createDelay(1.0);
+      delay.delayTime.value = 0.5;
+      const fb = ctx.createGain();
+      fb.gain.value = 0.4;
+      const delayGain = ctx.createGain();
+      delayGain.gain.value = 0.3;
+
+      osc.connect(g);
+      g.connect(_masterGain);
+      g.connect(delay);
+      delay.connect(fb);
+      fb.connect(delay);
+      delay.connect(delayGain);
+      delayGain.connect(_masterGain);
+
+      osc.start(now);
+      osc.stop(now + 3.0);
+    }
+
+    function play() {
+      if (_playing) return;
+      // 清除可能残留的 stop 清理定时器，防止竞态
+      if (_stopCleanupTimer) { clearTimeout(_stopCleanupTimer); _stopCleanupTimer = null; }
+      const ctx = _getCtx();
+      if (!ctx) return;
+      if (_nodes.length === 0 || !_masterGain) {
         if (!_build()) return;
       }
       _playing = true;
@@ -7175,7 +9013,11 @@
       _masterGain.gain.cancelScheduledValues(now);
       _masterGain.gain.setValueAtTime(_masterGain.gain.value, now);
       _masterGain.gain.linearRampToValueAtTime(_volume, now + 2.0);
-      _scheduleBell();
+      _playBassNote(_bassNotes[0]);
+      _scheduleMelody();
+      _scheduleChordChange();
+      _scheduleArp();
+      _startHealthCheck();
       savePref();
       Bus.emit('bgm:changed', { playing: true });
     }
@@ -7184,7 +9026,10 @@
       if (!_playing) return;
       _playing = false;
       const ctx = _getCtx();
-      if (_bellTimer) { clearTimeout(_bellTimer); _bellTimer = null; }
+      if (_melodyTimer) { clearTimeout(_melodyTimer); _melodyTimer = null; }
+      if (_chordTimer) { clearTimeout(_chordTimer); _chordTimer = null; }
+      if (_arpTimer) { clearTimeout(_arpTimer); _arpTimer = null; }
+      if (_healthCheckTimer) { clearInterval(_healthCheckTimer); _healthCheckTimer = null; }
       if (ctx && _masterGain) {
         const now = ctx.currentTime;
         _masterGain.gain.cancelScheduledValues(now);
@@ -7192,11 +9037,14 @@
         _masterGain.gain.linearRampToValueAtTime(0, now + 1.5);
       }
       // 1.5 秒后停止所有节点
-      setTimeout(() => {
+      _stopCleanupTimer = setTimeout(() => {
         _nodes.forEach(n => { try { n.stop && n.stop(); n.disconnect(); } catch {} });
         _nodes = [];
         _lfoNodes = [];
+        _padOscs = [];
+        _chordIdx = 0;
         _masterGain = null;
+        _stopCleanupTimer = null;
       }, 1600);
       savePref();
       Bus.emit('bgm:changed', { playing: false });
@@ -7223,6 +9071,38 @@
       Bus.emit('bgm:changed', { volume: _volume });
     }
 
+    // 定期健康检查：确保音频上下文持续运行
+    function _startHealthCheck() {
+      if (_healthCheckTimer) clearInterval(_healthCheckTimer);
+      _healthCheckTimer = setInterval(() => {
+        if (!_playing) return;
+        const ctx = _getCtx();
+        if (!ctx) return;
+        // 上下文被浏览器挂起 → 尝试恢复
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+        // 节点丢失 → 重建
+        if (_nodes.length === 0 || !_masterGain) {
+          if (_build()) {
+            const now = ctx.currentTime;
+            _masterGain.gain.setValueAtTime(0, now);
+            _masterGain.gain.linearRampToValueAtTime(_volume, now + 1.5);
+            _scheduleMelody();
+            _scheduleChordChange();
+            _scheduleArp();
+          }
+        }
+        // 音量意外归零 → 恢复
+        if (_masterGain && _masterGain.gain.value < 0.001 && _volume > 0) {
+          const now = ctx.currentTime;
+          _masterGain.gain.cancelScheduledValues(now);
+          _masterGain.gain.setValueAtTime(0.0001, now);
+          _masterGain.gain.linearRampToValueAtTime(_volume, now + 2.0);
+        }
+      }, 5000);
+    }
+
     // 浏览器策略：首次用户交互后自动恢复
     function _autoResume() {
       if (_playing && _nodes.length === 0) {
@@ -7234,8 +9114,326 @@
     document.addEventListener('pointerdown', _autoResume);
     document.addEventListener('keydown', _autoResume);
 
+    // 页面可见性变化：恢复被浏览器挂起的音频
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && _playing) {
+        const ctx = _getCtx();
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+        // 节点丢失（浏览器回收）→ 重建
+        if (_nodes.length === 0 || !_masterGain) {
+          play();
+        }
+      }
+    });
+
     return { play, stop, toggle, isPlaying, getVolume, setVolume };
   })();
+
+  // ============ 在线音乐模块（网易云 API + 直接 URL）============
+  const OnlineMusic = (() => {
+    let _audio = null;
+    let _playing = false;
+    let _currentSong = null;
+    let _apiBase = localStorage.getItem('wa_om_api') || '';
+    let _history = [];
+    try { _history = JSON.parse(localStorage.getItem('wa_om_history') || '[]'); } catch {}
+
+    function _ensureAudio() {
+      if (!_audio) {
+        _audio = new Audio();
+        _audio.volume = parseFloat(localStorage.getItem('wa_om_vol') || '0.5');
+        _audio.addEventListener('ended', () => {
+          _playing = false;
+          Bus.emit('om:changed', { playing: false, ended: true });
+        });
+        _audio.addEventListener('error', () => {
+          _playing = false;
+          Bus.emit('om:changed', { playing: false, error: true });
+        });
+        _audio.addEventListener('play', () => {
+          _playing = true;
+          Bus.emit('om:changed', { playing: true });
+        });
+        _audio.addEventListener('pause', () => {
+          _playing = false;
+          Bus.emit('om:changed', { playing: false });
+        });
+      }
+      return _audio;
+    }
+
+    async function search(keywords) {
+      if (!_apiBase) return { ok: false, msg: '未配置 API 地址，请点击设置按钮配置' };
+      try {
+        const url = `${_apiBase}/search?keywords=${encodeURIComponent(keywords)}&limit=20`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.code === 200 && data.result && data.result.songs) {
+        return {
+          ok: true,
+          list: data.result.songs.map(s => ({
+            id: s.id,
+            name: s.name,
+            artist: (s.artists || []).map(a => a.name).join(' / '),
+            album: (s.album || {}).name || '',
+          }))
+        };
+      }
+      return { ok: false, msg: data.msg || '搜索失败' };
+      } catch (e) {
+        return { ok: false, msg: '网络错误：' + e.message };
+      }
+    }
+
+    async function play(song) {
+      if (BGM.isPlaying()) BGM.stop();
+      const audio = _ensureAudio();
+
+      if (song.url) {
+        audio.src = song.url;
+        try { await audio.play(); } catch {}
+        _currentSong = song;
+        _addToHistory(song);
+        return { ok: true };
+      }
+
+      if (!_apiBase) return { ok: false, msg: '未配置 API 地址' };
+      try {
+        const res = await fetch(`${_apiBase}/song/url?id=${song.id}`);
+        const data = await res.json();
+        if (data.code === 200 && data.data && data.data[0] && data.data[0].url) {
+          audio.src = data.data[0].url;
+          try { await audio.play(); } catch {}
+          _currentSong = song;
+          _addToHistory(song);
+          return { ok: true };
+        }
+        return { ok: false, msg: '获取播放链接失败（可能需要 VIP）' };
+      } catch (e) {
+        return { ok: false, msg: '网络错误：' + e.message };
+      }
+    }
+
+    function playByUrl(url, name) {
+      if (BGM.isPlaying()) BGM.stop();
+      const audio = _ensureAudio();
+      audio.src = url;
+      audio.play().catch(() => {});
+      _currentSong = { name: name || '自定义音乐', url };
+      _addToHistory(_currentSong);
+    }
+
+    function stop() {
+      if (_audio) { _audio.pause(); _audio.currentTime = 0; }
+      _currentSong = null;
+    }
+    function pause() { if (_audio) _audio.pause(); }
+    function resume() {
+      if (_audio && _currentSong) {
+        if (BGM.isPlaying()) BGM.stop();
+        _audio.play().catch(() => {});
+      }
+    }
+    function isPlaying() { return _playing; }
+    function getCurrent() { return _currentSong; }
+    function getApiBase() { return _apiBase; }
+    function setApiBase(url) {
+      _apiBase = (url || '').trim().replace(/\/$/, '');
+      localStorage.setItem('wa_om_api', _apiBase);
+    }
+    function getHistory() { return _history; }
+    function setVolume(v) {
+      const vol = Math.max(0, Math.min(1, v));
+      if (_audio) _audio.volume = vol;
+      localStorage.setItem('wa_om_vol', vol);
+    }
+    function getVolume() { return _audio ? _audio.volume : parseFloat(localStorage.getItem('wa_om_vol') || '0.5'); }
+
+    function _addToHistory(song) {
+      _history = _history.filter(s => s.name !== song.name);
+      _history.unshift({ name: song.name, artist: song.artist, url: song.url, id: song.id });
+      if (_history.length > 30) _history = _history.slice(0, 30);
+      localStorage.setItem('wa_om_history', JSON.stringify(_history));
+    }
+
+    return { search, play, playByUrl, stop, pause, resume, isPlaying, getCurrent, getApiBase, setApiBase, getHistory, setVolume, getVolume };
+  })();
+
+  // ============ 在线音乐 UI ============
+  let _omModal = null;
+  function openMusicPanel() {
+    if (_omModal) { _omModal.remove(); _omModal = null; }
+    const dlg = document.createElement('div');
+    dlg.className = 'admin-modal';
+    dlg.style.zIndex = '10001';
+    dlg.innerHTML = `
+      <div class="admin-modal-body om-panel">
+        <h3 class="am-title">在线音乐 · ONLINE MUSIC</h3>
+        <div class="om-tabs">
+          <button class="om-tab active" data-tab="search">搜索</button>
+          <button class="om-tab" data-tab="url">直链播放</button>
+          <button class="om-tab" data-tab="history">历史</button>
+          <button class="om-tab" data-tab="settings">设置</button>
+        </div>
+        <div class="om-body" id="om-body"></div>
+        <div class="am-foot">
+          <button class="abtn abtn-cancel" data-act="close">关闭</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dlg);
+    _omModal = dlg;
+
+    dlg.addEventListener('click', e => { if (e.target === dlg) { dlg.remove(); _omModal = null; } });
+    dlg.querySelector('[data-act="close"]').addEventListener('click', () => { dlg.remove(); _omModal = null; });
+
+    const body = dlg.querySelector('#om-body');
+    const tabs = dlg.querySelectorAll('.om-tab');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      renderTab(t.dataset.tab);
+    }));
+
+    function renderTab(tab) {
+      if (tab === 'search') renderSearch();
+      else if (tab === 'url') renderUrl();
+      else if (tab === 'history') renderHistory();
+      else if (tab === 'settings') renderSettings();
+    }
+
+    function renderSearch() {
+      body.innerHTML = `
+        <div class="om-search-row">
+          <input type="text" id="om-search-input" placeholder="搜索歌曲 / 歌手…" class="admin-search-input" style="flex:1;min-width:0">
+          <button class="abtn abtn-approve" id="om-search-btn">搜索</button>
+        </div>
+        <div id="om-results" class="om-results"></div>
+      `;
+      const input = body.querySelector('#om-search-input');
+      const btn = body.querySelector('#om-search-btn');
+      const results = body.querySelector('#om-results');
+      async function doSearch() {
+        const kw = input.value.trim();
+        if (!kw) return;
+        results.innerHTML = '<div class="om-loading">搜索中…</div>';
+        const r = await OnlineMusic.search(kw);
+        if (!r.ok) { results.innerHTML = `<div class="om-empty">${r.msg}</div>`; return; }
+        if (!r.list.length) { results.innerHTML = '<div class="om-empty">无结果</div>'; return; }
+        results.innerHTML = r.list.map(s => `
+          <div class="om-song" data-id="${s.id}" data-name="${escapeAttr(s.name)}" data-artist="${escapeAttr(s.artist)}">
+            <div class="om-song-info">
+              <div class="om-song-name">${escapeHtml(s.name)}</div>
+              <div class="om-song-artist">${escapeHtml(s.artist)}${s.album ? ' · ' + escapeHtml(s.album) : ''}</div>
+            </div>
+            <button class="om-play-btn">▶</button>
+          </div>
+        `).join('');
+        results.querySelectorAll('.om-song').forEach(el => {
+          el.querySelector('.om-play-btn').addEventListener('click', async () => {
+            const song = { id: el.dataset.id, name: el.dataset.name, artist: el.dataset.artist };
+            el.querySelector('.om-play-btn').textContent = '…';
+            const r = await OnlineMusic.play(song);
+            el.querySelector('.om-play-btn').textContent = r.ok ? '♪' : '▶';
+            if (r.ok) {
+              results.querySelectorAll('.om-song').forEach(x => x.classList.remove('playing'));
+              el.classList.add('playing');
+              syncOmUI();
+            } else {
+              banner(r.msg || '播放失败', 'err');
+            }
+          });
+        });
+      }
+      btn.addEventListener('click', doSearch);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+      input.focus();
+    }
+
+    function renderUrl() {
+      body.innerHTML = `
+        <div class="om-url-section">
+          <label class="af"><span>音频直链 URL（mp3 / m4a / wav 等）</span>
+            <input type="text" id="om-url-input" placeholder="https://example.com/music.mp3" style="width:100%">
+          </label>
+          <label class="af"><span>名称（选填）</span>
+            <input type="text" id="om-url-name" placeholder="自定义音乐名" style="width:100%">
+          </label>
+          <button class="abtn abtn-approve" id="om-url-play" style="margin-top:8px">播放</button>
+        </div>
+      `;
+      body.querySelector('#om-url-play').addEventListener('click', () => {
+        const url = body.querySelector('#om-url-input').value.trim();
+        const name = body.querySelector('#om-url-name').value.trim();
+        if (!url) { banner('请输入音频 URL', 'err'); return; }
+        OnlineMusic.playByUrl(url, name);
+        syncOmUI();
+        banner('开始播放', 'ok');
+      });
+    }
+
+    function renderHistory() {
+      const hist = OnlineMusic.getHistory();
+      if (!hist.length) { body.innerHTML = '<div class="om-empty">暂无播放历史</div>'; return; }
+      body.innerHTML = hist.map(s => `
+        <div class="om-song" data-name="${escapeAttr(s.name)}" data-artist="${escapeAttr(s.artist || '')}" data-url="${escapeAttr(s.url || '')}" data-id="${s.id || ''}">
+          <div class="om-song-info">
+            <div class="om-song-name">${escapeHtml(s.name)}</div>
+            <div class="om-song-artist">${escapeHtml(s.artist || '')}</div>
+          </div>
+          <button class="om-play-btn">▶</button>
+        </div>
+      `).join('');
+      body.querySelectorAll('.om-song').forEach(el => {
+        el.querySelector('.om-play-btn').addEventListener('click', async () => {
+          const song = { id: el.dataset.id, name: el.dataset.name, artist: el.dataset.artist, url: el.dataset.url };
+          const r = await OnlineMusic.play(song);
+          if (r.ok) syncOmUI(); else banner(r.msg || '播放失败', 'err');
+        });
+      });
+    }
+
+    function renderSettings() {
+      const api = OnlineMusic.getApiBase();
+      body.innerHTML = `
+        <div class="om-settings">
+          <label class="af"><span>网易云 API 地址</span>
+            <input type="text" id="om-api-input" value="${escapeAttr(api)}" placeholder="https://your-api.vercel.app" style="width:100%">
+          </label>
+          <p style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.8">
+            需要部署网易云 API 服务（如 <a href="https://github.com/Binaryify/NeteaseCloudMusicApi" target="_blank" style="color:var(--silver-2)">NeteaseCloudMusicApi</a>）并填入地址。<br>
+            可部署到 Vercel / Cloudflare Workers 等免费平台。<br>
+            留空则只能使用直链播放功能。
+          </p>
+          <button class="abtn abtn-approve" id="om-api-save" style="margin-top:10px">保存</button>
+        </div>
+      `;
+      body.querySelector('#om-api-save').addEventListener('click', () => {
+        OnlineMusic.setApiBase(body.querySelector('#om-api-input').value);
+        banner('API 地址已保存', 'ok');
+      });
+    }
+
+    renderTab('search');
+  }
+
+  function syncOmUI() {
+    const playing = OnlineMusic.isPlaying();
+    const current = OnlineMusic.getCurrent();
+    const lbl = document.getElementById('sb-om-label');
+    if (lbl) lbl.textContent = playing ? '在线音乐：' + (current ? current.name : '播放中') : '在线音乐：关';
+    const btn = document.getElementById('sb-om-toggle');
+    if (btn) btn.style.color = playing ? 'var(--silver-2)' : '';
+  }
+
+  function initOmUI() {
+    const btn = document.getElementById('sb-om-toggle');
+    if (btn) btn.addEventListener('click', openMusicPanel);
+    Bus.on('om:changed', syncOmUI);
+    syncOmUI();
+  }
 
   // ============ 音效开关 UI 同步 ============
   let _sfxUIBound = false;
@@ -7341,6 +9539,7 @@
     initSidebar();
     initSfxUI();
     initBgmUI();
+    initOmUI();
     refreshIdentity();
     if (!Auth.get()) {
       showLoginGate();
