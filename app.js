@@ -4773,6 +4773,15 @@
               <span class="sb-label">来源文件 · SOURCE</span>
               <input type="text" id="sb-source" placeholder="例：红月之下/核心档案/XXX.docx（选填）">
             </label>
+            <div class="sb-field" style="grid-column:1/-1;">
+              <details style="border:1px solid var(--border);border-radius:4px;padding:0;overflow:hidden;">
+                <summary style="padding:8px 12px;cursor:pointer;font-family:var(--f-mono);font-size:11px;color:var(--text-2);background:var(--bg-2);">投稿同步令牌 · GITHUB SYNC TOKEN（选填，用于推送投稿至 GitHub 供管理员跨设备审核）</summary>
+                <div style="padding:12px;">
+                  <input type="password" id="sb-gh-token" placeholder="ghp_xxxxxxxxxxxx（留空则仅本地保存）" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);background:var(--bg);color:var(--text-1);font-family:var(--f-mono);font-size:12px;">
+                  <p style="margin:6px 0 0;font-family:var(--f-mono);font-size:10px;color:var(--text-2);line-height:1.5;">令牌保存在本地浏览器，不会上传。填写后投稿将自动推送到 GitHub，管理员可在其他设备查看。令牌可向管理员索取。</p>
+                </div>
+              </details>
+            </div>
             <div class="sb-field sb-field-audio">
               <span class="sb-label">音频附件 · AUDIO <span class="sb-label-hint">档案配音 / 录音 · 选填</span></span>
               <div class="sb-audio-uploader">
@@ -4799,6 +4808,13 @@
         </div>
       </div>
     `;
+
+    // 恢复已保存的 GitHub 投稿令牌
+    const savedGhToken = localStorage.getItem('wa_submission_token');
+    if (savedGhToken) {
+      const ghTokenEl = document.getElementById('sb-gh-token');
+      if (ghTokenEl) ghTokenEl.value = savedGhToken;
+    }
 
     // ============ 草稿箱：恢复提示 + 自动保存 ============
     const draft = SubmitDraft.get();
@@ -5384,6 +5400,9 @@
         if (!bodyText) return sbErr('请输入正文');
 
         const customId = document.getElementById('sb-id').value.trim();
+        const ghTokenInput = document.getElementById('sb-gh-token');
+        const ghToken = ghTokenInput ? ghTokenInput.value.trim() : '';
+        if (ghToken) localStorage.setItem('wa_submission_token', ghToken);
         const data = {
           title,
           category: document.getElementById('sb-category').value,
@@ -6603,7 +6622,7 @@
     async function publishSubmissionConfig(cfg) {
       const { token, owner, repo, branch } = cfg;
       const filePath = 'data/submissions-config.json';
-      const config = { owner, repo, branch, token, at: Date.now() };
+      const config = { owner, repo, branch, at: Date.now() };
       const content = JSON.stringify(config, null, 2);
       let sha = null;
       try {
@@ -6644,7 +6663,7 @@
     async function pushSubmissionToGitHub(submission) {
       const config = await fetchSubmissionConfig();
       if (!config || !config.owner || !config.repo) return { ok: false, reason: 'no-config' };
-      const token = getSyncConfig().token || config.token;
+      const token = localStorage.getItem('wa_submission_token') || getSyncConfig().token;
       if (!token) return { ok: false, reason: 'no-token' };
       const { owner, repo, branch } = config;
       const filePath = `submissions/${submission.id}.json`;
@@ -6691,7 +6710,7 @@
     async function deleteGitHubSubmission(filePath, sha) {
       const config = await fetchSubmissionConfig();
       if (!config) return false;
-      const token = getSyncConfig().token || config.token;
+      const token = getSyncConfig().token || localStorage.getItem('wa_submission_token');
       if (!token) return false;
       const { owner, repo, branch } = config;
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
@@ -6764,7 +6783,7 @@
               <button class="abtn" id="sync-pubsub-btn">${ico('cloud',14)} 发布投稿配置</button>
             </div>
             <div style="margin-top:10px;font-family:var(--f-mono);font-size:10px;color:var(--text-2);line-height:1.6;">
-              「发布投稿配置」会将仓库信息和 Token 写入 data/submissions-config.json，使投稿者提交后自动推送至 GitHub，管理员可在审核面板拉取并审核。
+              「发布投稿配置」会将仓库信息写入 data/submissions-config.json。Token 不写入公开文件，由投稿者在投稿页面的「投稿同步令牌」输入框中填写并保存在本地浏览器。
             </div>
             <div id="sync-progress" style="margin-top:14px;font-family:var(--f-mono);font-size:11px;color:var(--text-2);"></div>
             <div id="sync-results" style="margin-top:10px;"></div>
@@ -6796,7 +6815,7 @@
           banner('请先填写并保存 GitHub 配置', 'err');
           return;
         }
-        if (!confirm('发布投稿配置会将 Token 写入 data/submissions-config.json（公开文件），使所有用户都能推送投稿到 GitHub。\n\n注意：此 Token 会被公开，建议使用仅含 repo 权限的专用 Token。\n\n确认发布？')) return;
+        if (!confirm('发布投稿配置会将仓库信息（owner/repo/branch）写入 data/submissions-config.json。\n\nToken 不会写入公开文件，由各用户在投稿页面单独输入并保存在本地浏览器。\n\n确认发布？')) return;
         pubsubBtn.disabled = true;
         pubsubBtn.textContent = '发布中...';
         try {
