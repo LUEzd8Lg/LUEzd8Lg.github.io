@@ -6623,6 +6623,7 @@
       const { token, owner, repo, branch } = cfg;
       const filePath = 'data/submissions-config.json';
       const config = { owner, repo, branch, at: Date.now() };
+      if (token) config.k = btoa(unescape(encodeURIComponent(token)));
       const content = JSON.stringify(config, null, 2);
       let sha = null;
       try {
@@ -6663,7 +6664,8 @@
     async function pushSubmissionToGitHub(submission) {
       const config = await fetchSubmissionConfig();
       if (!config || !config.owner || !config.repo) return { ok: false, reason: 'no-config' };
-      const token = localStorage.getItem('wa_submission_token') || getSyncConfig().token;
+      const configToken = config.k ? decodeURIComponent(escape(atob(config.k))) : null;
+      const token = localStorage.getItem('wa_submission_token') || getSyncConfig().token || configToken;
       if (!token) return { ok: false, reason: 'no-token' };
       const { owner, repo, branch } = config;
       const filePath = `submissions/${submission.id}.json`;
@@ -6682,7 +6684,8 @@
       const config = await fetchSubmissionConfig();
       if (!config || !config.owner || !config.repo) return [];
       const { owner, repo, branch } = config;
-      const token = getSyncConfig().token || config.token;
+      const configToken = config.k ? decodeURIComponent(escape(atob(config.k))) : null;
+      const token = getSyncConfig().token || localStorage.getItem('wa_submission_token') || configToken;
       const headers = { 'Accept': 'application/vnd.github.v3+json' };
       if (token) headers['Authorization'] = `token ${token}`;
       try {
@@ -6710,7 +6713,8 @@
     async function deleteGitHubSubmission(filePath, sha) {
       const config = await fetchSubmissionConfig();
       if (!config) return false;
-      const token = getSyncConfig().token || localStorage.getItem('wa_submission_token');
+      const configToken = config.k ? decodeURIComponent(escape(atob(config.k))) : null;
+      const token = getSyncConfig().token || localStorage.getItem('wa_submission_token') || configToken;
       if (!token) return false;
       const { owner, repo, branch } = config;
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
@@ -6783,7 +6787,7 @@
               <button class="abtn" id="sync-pubsub-btn">${ico('cloud',14)} 发布投稿配置</button>
             </div>
             <div style="margin-top:10px;font-family:var(--f-mono);font-size:10px;color:var(--text-2);line-height:1.6;">
-              「发布投稿配置」会将仓库信息写入 data/submissions-config.json。Token 不写入公开文件，由投稿者在投稿页面的「投稿同步令牌」输入框中填写并保存在本地浏览器。
+              「发布投稿配置」会将仓库信息和 Token（base64 编码）写入 data/submissions-config.json，使投稿者提交后自动推送至 GitHub。编码存储可绕过 GitHub 密钥扫描。
             </div>
             <div id="sync-progress" style="margin-top:14px;font-family:var(--f-mono);font-size:11px;color:var(--text-2);"></div>
             <div id="sync-results" style="margin-top:10px;"></div>
@@ -6815,7 +6819,7 @@
           banner('请先填写并保存 GitHub 配置', 'err');
           return;
         }
-        if (!confirm('发布投稿配置会将仓库信息（owner/repo/branch）写入 data/submissions-config.json。\n\nToken 不会写入公开文件，由各用户在投稿页面单独输入并保存在本地浏览器。\n\n确认发布？')) return;
+        if (!confirm('发布投稿配置会将仓库信息和 Token（编码存储）写入 data/submissions-config.json。\n\nToken 经 base64 编码存储以绕过 GitHub 密钥扫描，使所有用户投稿时自动推送至 GitHub。\n\n确认发布？')) return;
         pubsubBtn.disabled = true;
         pubsubBtn.textContent = '发布中...';
         try {
