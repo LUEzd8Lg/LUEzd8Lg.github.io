@@ -6620,7 +6620,13 @@
         headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
         body: JSON.stringify(bodyObj)
       });
-      return res.ok;
+      if (res.ok) return { ok: true };
+      let errMsg = `HTTP ${res.status}`;
+      try {
+        const errData = await res.json();
+        if (errData.message) errMsg += ' · ' + errData.message;
+      } catch (e) {}
+      return { ok: false, error: errMsg };
     }
 
     async function fetchSubmissionConfig() {
@@ -6794,12 +6800,12 @@
         pubsubBtn.disabled = true;
         pubsubBtn.textContent = '发布中...';
         try {
-          const ok = await publishSubmissionConfig(c);
-          if (ok) {
+          const result = await publishSubmissionConfig(c);
+          if (result.ok) {
             SFX.login();
             banner('投稿配置已发布到 GitHub（data/submissions-config.json）', 'ok');
           } else {
-            banner('投稿配置发布失败，请检查 Token 权限', 'err');
+            banner('投稿配置发布失败：' + (result.error || '请检查 Token 权限'), 'err');
           }
         } catch (e) {
           banner('投稿配置发布失败：' + (e.message || '未知错误'), 'err');
