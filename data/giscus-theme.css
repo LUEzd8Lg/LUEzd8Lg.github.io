@@ -1,0 +1,120 @@
+/* ============================================================
+   世界观察档案库 · Giscus 评论区主题（黑白档案风）
+   该文件由 giscus iframe 加载（data-theme 指向本文件 URL），
+   覆盖 GitHub Primer 变量使评论区融入档案库视觉。
+   ============================================================ */
+
+:root,
+.giscus {
+  /* 画布 / 边框：黑白灰档案底色 */
+  --color-canvas-default: #0e0e10;
+  --color-canvas-subtle: #161618;
+  --color-canvas-inset: #0a0a0c;
+  --color-border-default: #2c2c30;
+  --color-border-muted: #222226;
+  --color-neutral-muted: rgba(200, 200, 205, 0.08);
+
+  /* 文字 */
+  --color-fg-default: #d6d6d9;
+  --color-fg-muted: #8b8b91;
+  --color-fg-subtle: #5d5d63;
+
+  /* 强调色：银灰替代 GitHub 蓝 */
+  --color-accent-fg: #c9c9cf;
+  --color-accent-emphasis: #e8e8ea;
+  --color-accent-muted: rgba(200, 200, 205, 0.12);
+  --color-accent-subtle: rgba(200, 200, 205, 0.10);
+
+  /* 成功 / 危险 */
+  --color-success-fg: #4ade80;
+  --color-danger-fg: #e5484d;
+
+  /* 按钮 */
+  --color-btn-bg: #1b1b1f;
+  --color-btn-border: #2c2c30;
+  --color-btn-hover-bg: #242429;
+  --color-btn-active-bg: #2a2a30;
+  --color-btn-text: #d6d6d9;
+  --color-btn-primary-bg: #d6d6d9;
+  --color-btn-primary-text: #101012;
+  --color-btn-primary-hover-bg: #e8e8ea;
+  --color-btn-primary-disabled-bg: rgba(214, 214, 217, 0.35);
+
+  /* 输入框 */
+  --color-input-bg: #0a0a0c;
+  --color-input-border: #2c2c30;
+  --color-input-focus-border: #8b8b91;
+
+  /* 语法高亮（评论内代码） */
+  --color-prettylights-syntax-comment: #6d6d74;
+  --color-prettylights-syntax-string: #b8b8be;
+  --color-prettylights-syntax-keyword: #e8e8ea;
+
+  /* 反应 */
+  --color-reaction-selected-bg: rgba(200, 200, 205, 0.14);
+  --color-reaction-selected-border: #8b8b91;
+
+  /* 头像以外的圆角全部直角化：档案系统无圆角 */
+  --borderRadius-medium: 0;
+  --borderRadius-small: 0;
+  --borderRadius-large: 0;
+}
+
+/* 评论主体 */
+.giscus .gsc-comment-box,
+.giscus .gsc-comment-box-textarea,
+.giscus .gsc-reply-box {
+  background: var(--color-input-bg);
+  border-color: var(--color-border-default);
+  border-radius: 0;
+}
+
+.giscus .gsc-comment-box-textarea:focus,
+.giscus .gsc-reply-box:focus-within {
+  border-color: var(--color-input-focus-border);
+  box-shadow: none;
+}
+
+/* 头部「N 条评论」与排序 */
+.giscus .gsc-comments-header,
+.giscus .gsc-comments-count,
+.giscus .gsc-comment-count {
+  color: var(--color-fg-muted);
+}
+
+/* 时间线与分隔 */
+.giscus .gsc-timeline-line,
+.giscus .gsc-comment-divider {
+  background: var(--color-border-muted);
+}
+
+/* 评论卡片 */
+.giscus .gsc-comment,
+.giscus .gsc-reply {
+  border-color: var(--color-border-muted);
+}
+
+/* 链接保留银灰，悬停加下划线 */
+.giscus a {
+  color: var(--color-accent-fg);
+}
+.giscus a:hover {
+  color: var(--color-accent-emphasis);
+}
+
+/* 主按钮（评论 / 提交）直角 + 高对比 */
+.giscus button,
+.giscus .btn {
+  border-radius: 0;
+}
+
+/* Markdown 正文 */
+.giscus .gsc-markdown-body {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* 登录提示条 */
+.giscus .gsc-sign-in {
+  border-radius: 0;
+}

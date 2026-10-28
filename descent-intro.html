@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Terminal Descent - EC-4483</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --crt-green:#00ff41;
+    --crt-amber:#ffb000;
+    --terminal-white:#eaeff2;
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New', monospace;
+  }
+  *,*::before,*::after{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    background:#000;
+    color:var(--terminal-white);
+    font-family:var(--mono);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ========== 舞台 ========== */
+  .screen{
+    position:fixed; inset:0;
+    overflow:hidden;
+    transform-origin:center center;
+    will-change:transform, filter;
+  }
+  .screen-collapse{
+    animation:collapse .9s cubic-bezier(.72,0,.28,1) forwards;
+  }
+  @keyframes collapse{
+    0%  { transform:scale(1,1);      filter:brightness(1)  blur(0); }
+    38% { transform:scale(1,.012);   filter:brightness(4)  blur(0); }
+    68% { transform:scale(.02,.012); filter:brightness(9)  blur(0); }
+    100%{ transform:scale(0,0);      filter:brightness(16) blur(2px); }
+  }
+  /* ========== 粒子画布 ========== */
+  #fx{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    z-index:0;
+    pointer-events:none;
+  }
+  /* ========== 竖井（3D） ========== */
+  .shaft-container{
+    position:absolute; inset:0;
+    z-index:1;
+    perspective:var(--persp, 1000px);
+    perspective-origin:50% 50%;
+    transform-style:preserve-3d;
+    pointer-events:none;
+    will-change:perspective;
+  }
+  .shaft-container.is-jitter{
+    animation:jitter .13s steps(1,end) infinite;
+  }
+  @keyframes jitter{
+    0%  { transform:translate3d(0,0,0); }
+    20% { transform:translate3d(-3px,2px,0); }
+    40% { transform:translate3d(3px,-2px,0); }
+    60% { transform:translate3d(-2px,-3px,0); }
+    80% { transform:translate3d(2px,3px,0); }
+    100%{ transform:translate3d(0,0,0); }
+  }
+  .archive-rack{
+    position:absolute;
+    inset:0; margin:auto;
+    width:min(1200px, 86vw);
+    height:clamp(200px, 36vh, 360px);
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    padding:20px;
+    border:1px solid rgba(0,255,65,.18);
+    background:
+      linear-gradient(180deg, rgba(0,255,65,.05), transparent 60%),
+      repeating-linear-gradient(90deg, rgba(0,255,65,.04) 0 1px, transparent 1px 64px);
+    box-shadow:
+      0 0 24px rgba(0,255,65,.06),
+      inset 0 0 40px rgba(0,255,65,.03);
+    opacity:0;
+    will-change:transform, opacity;
+    backface-visibility:hidden;
+    animation-name:rack-rush;
+    animation-duration:4s;
+    animation-timing-function:linear;
+    animation-fill-mode:forwards;
+  }
+  .archive-id{
+    font-size:clamp(13px, 1.8vw, 22px);
+    font-weight:800;
+    letter-spacing:3px;
+    color:rgba(0,255,65,.28);
+    white-space:nowrap;
+    text-shadow:0 0 12px rgba(0,255,65,.35);
+  }
+  .archive-id.is-alt{ color:rgba(255,176,0,.28); text-shadow:0 0 12px rgba(255,176,0,.3); }
+  .rack-divider{
+    width:180px; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(0,255,65,.3), transparent);
+  }
+  @keyframes rack-rush{
+    0%  { transform:translate3d(0,0,-2000px); opacity:0; }
+    12% { opacity:1; }
+    84% { opacity:.85; }
+    100%{ transform:translate3d(0,-460px,1100px); opacity:0; }
+  }
+  /* ========== HUD ========== */
+  .hud{
+    position:absolute; inset:0;
+    z-index:50;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:clamp(28px, 4vw, 56px);
+    opacity:0;
+    transition:opacity .6s ease;
+    pointer-events:none;
+  }
+  .hud.is-live{ opacity:1; }
+  .corner{
+    position:absolute;
+    width:34px; height:34px;
+    border:2px solid rgba(0,255,65,.55);
+    filter:drop-shadow(0 0 6px rgba(0,255,65,.45));
+  }
+  .corner.tl{ top:18px; left:18px;  border-right:none; border-bottom:none; }
+  .corner.tr{ top:18px; right:18px; border-left:none;  border-bottom:none; }
+  .corner.bl{ bottom:18px; left:18px;  border-right:none; border-top:none; }
+  .corner.br{ bottom:18px; right:18px; border-left:none;  border-top:none; }
+  .ticker{
+    position:absolute;
+    top:0; left:0; right:0;
+    height:22px;
+    overflow:hidden;
+    border-bottom:1px solid rgba(0,255,65,.14);
+    background:rgba(0,18,4,.55);
+    font-size:10px;
+    line-height:22px;
+    letter-spacing:3px;
+    color:rgba(0,255,65,.5);
+    white-space:nowrap;
+  }
+  .ticker span{
+    display:inline-block;
+    padding-left:100%;
+    animation:ticker 26s linear infinite;
+  }
+  @keyframes ticker{ to{ transform:translateX(-100%); } }
+  .hud-top, .hud-bottom{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+  }
+  .lvl-counter{
+    font-size:clamp(38px, 7vw, 76px);
+    font-weight:800;
+    line-height:1;
+    letter-spacing:-1px;
+    color:var(--crt-green);
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 18px currentColor, 0 0 48px rgba(0,255,65,.32);
+  }
+  .depth-box{ text-align:right; }
+  .depth-label{
+    font-size:10px; letter-spacing:4px;
+    color:rgba(0,255,65,.55);
+    margin-bottom:2px;
+  }
+  .depth-val{
+    font-size:clamp(20px, 3vw, 32px);
+    font-weight:700;
+    color:var(--crt-green);
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 14px rgba(0,255,65,.6);
+  }
+  .floor-indicator{
+    position:absolute;
+    left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    font-size:clamp(64px, 12vw, 120px);
+    font-weight:900;
+    letter-spacing:-5px;
+    color:rgba(255,255,255,.07);
+    font-variant-numeric:tabular-nums;
+    transition:color .4s ease, font-size .4s ease, letter-spacing .4s ease;
+    pointer-events:none;
+  }
+  .floor-indicator.is-terminal{
+    color:var(--crt-green);
+    font-size:clamp(34px, 6.4vw, 78px);
+    letter-spacing:2px;
+    text-shadow:0 0 34px rgba(0,255,65,.55);
+  }
+  .reticle{
+    position:absolute;
+    left:50%; top:50%;
+    width:260px; height:260px;
+    margin:-130px 0 0 -130px;
+    border:1px solid rgba(0,255,65,.12);
+    border-radius:50%;
+    animation:spin 16s linear infinite;
+    pointer-events:none;
+  }
+  .reticle::before, .reticle::after{
+    content:'';
+    position:absolute;
+    background:rgba(0,255,65,.22);
+  }
+  .reticle::before{ left:50%; top:-6px;  width:1px; height:12px; }
+  .reticle::after{  left:50%; bottom:-6px; width:1px; height:12px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .progress{ flex:1; max-width:420px; }
+  .progress-label{
+    font-size:10px; letter-spacing:4px;
+    color:rgba(0,255,65,.55);
+    margin-bottom:6px;
+  }
+  .progress-bar{
+    width:100%; height:3px;
+    background:rgba(0,255,65,.14);
+    overflow:hidden;
+  }
+  .progress-bar i{
+    display:block;
+    width:100%; height:100%;
+    background:var(--crt-green);
+    transform:scaleX(0);
+    transform-origin:left center;
+    box-shadow:0 0 12px var(--crt-green);
+    will-change:transform;
+  }
+  .status-box{ text-align:right; }
+  .hud-status{
+    font-size:13px;
+    color:var(--crt-green);
+    text-shadow:0 0 10px rgba(0,255,65,.5);
+    letter-spacing:1px;
+  }
+  .hud-meta{ font-size:10px; opacity:.55; letter-spacing:1px; }
+  /* ========== 扫描带 ========== */
+  .scan-strip{
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:22%;
+    background:linear-gradient(to bottom, transparent, rgba(0,255,65,.28), transparent);
+    opacity:0;
+    z-index:60;
+    pointer-events:none;
+    will-change:transform;
+  }
+  .scan-strip.is-live{ opacity:.7; }
+  /* ========== 字幕 ========== */
+  .subtitles{
+    position:absolute;
+    left:0; right:0; bottom:9%;
+    z-index:150;
+    padding:0 24px;
+    text-align:center;
+    transition:opacity .16s ease, transform .16s ease;
+    will-change:opacity, transform;
+  }
+  .subtitles.is-out{ opacity:0; transform:translateY(10px); }
+  .sub-zh{ font-size:clamp(16px, 2.3vw, 24px); font-weight:500; margin-bottom:6px; }
+  .sub-en{ font-size:clamp(11px, 1.15vw, 14px); opacity:.7; letter-spacing:2px; }
+  /* ========== 通电启动线 ========== */
+  .power-on-line{
+    position:absolute;
+    top:50%; left:50%;
+    width:0; height:2px;
+    background:#fff;
+    box-shadow:0 0 20px #fff, 0 0 70px rgba(255,255,255,.6);
+    transform:translate(-50%,-50%);
+    z-index:200;
+    pointer-events:none;
+  }
+  .power-on-line.is-booting{
+    animation:line-expand 1.5s ease forwards;
+  }
+  @keyframes line-expand{
+    0%  { width:0;    height:2px;  background:#fff; }
+    50% { width:100%; height:2px;  background:#fff; }
+    100%{ width:100%; height:100%; background:transparent; box-shadow:none; }
+  }
+  /* ========== 故障切片 ========== */
+  .glitch-slice{
+    position:fixed;
+    left:0; right:0;
+    z-index:300;
+    pointer-events:none;
+    mix-blend-mode:screen;
+    animation:slice-flash .18s steps(2) forwards;
+  }
+  @keyframes slice-flash{
+    0%  { opacity:0; transform:translateX(0); }
+    30% { opacity:1; transform:translateX(var(--tx, 8px)); }
+    100%{ opacity:0; transform:translateX(0); }
+  }
+  /* ========== 关机残点 ========== */
+  .shutdown-dot{
+    position:fixed;
+    left:50%; top:50%;
+    width:0; height:0;
+    transform:translate(-50%,-50%);
+    background:#fff;
+    border-radius:50%;
+    z-index:400;
+    opacity:0;
+    pointer-events:none;
+    box-shadow:0 0 40px #fff, 0 0 90px var(--crt-green);
+  }
+  .shutdown-dot.is-on{
+    opacity:1;
+    width:6px; height:6px;
+    transition:all .35s ease;
+    animation:dot-fade .7s .5s forwards;
+  }
+  @keyframes dot-fade{ to{ opacity:0; transform:translate(-50%,-50%) scale(.2); } }
+  /* ========== CRT 滤镜 ========== */
+  .crt-overlay{
+    position:fixed; inset:0;
+    z-index:100;
+    pointer-events:none;
+    background:
+      linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,.25) 50%),
+      linear-gradient(90deg, rgba(255,0,0,.06), rgba(0,255,0,.02), rgba(0,0,255,.06));
+    background-size:100% 2px, 3px 100%;
+    opacity:.8;
+  }
+  .crt-curve{
+    position:fixed; inset:0;
+    z-index:101;
+    pointer-events:none;
+    box-shadow:inset 0 0 110px rgba(0,0,0,.6);
+    background:radial-gradient(circle at center, transparent 0%, rgba(0,0,0,.45) 100%);
+  }
+  /* ========== 无障碍 ========== */
+  @media (prefers-reduced-motion: reduce){
+    .shaft-container.is-jitter{ animation:none; }
+    .archive-rack{ animation-duration:.01ms !important; }
+    .ticker span{ animation-duration:90s; }
+    .reticle{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="screen" id="screen">
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="shaft-container" id="shaft" aria-hidden="true"></div>
+  <div class="scan-strip" id="scan-strip"></div>
+  <div class="hud" id="hud">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+    <div class="ticker"><span id="ticker-text"></span></div>
+    <div class="hud-top">
+      <div class="lvl-counter" id="lvl-count">LVL 000</div>
+      <div class="depth-box">
+        <div class="depth-label">DEPTH</div>
+        <div class="depth-val" id="depth-val">00000</div>
+      </div>
+    </div>
+    <div class="reticle"></div>
+    <div class="floor-indicator" id="floor-tag"></div>
+    <div class="hud-bottom">
+      <div class="progress">
+        <div class="progress-label">DESCENT</div>
+        <div class="progress-bar"><i id="progress-fill"></i></div>
+      </div>
+      <div class="status-box">
+        <div class="hud-status" id="sys-status">SYSTEM STATUS: BOOT</div>
+        <div class="hud-meta">ENCRYPTION: AES-256-ECB</div>
+      </div>
+    </div>
+  </div>
+  <div class="subtitles" id="subtitles" role="status" aria-live="polite">
+    <div class="sub-zh" id="sub-zh"></div>
+    <div class="sub-en" id="sub-en"></div>
+  </div>
+  <div class="power-on-line" id="boot-line"></div>
+  <div class="crt-overlay"></div>
+  <div class="crt-curve"></div>
+</div>
+<div class="shutdown-dot" id="dot"></div>
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const screenEl  = $('screen');
+  const shaft     = $('shaft');
+  const hud       = $('hud');
+  const lvlCount  = $('lvl-count');
+  const floorTag  = $('floor-tag');
+  const depthVal  = $('depth-val');
+  const progress  = $('progress-fill');
+  const sysStatus = $('sys-status');
+  const subs      = $('subtitles');
+  const subZh     = $('sub-zh');
+  const subEn     = $('sub-en');
+  const bootLine  = $('boot-line');
+  const scanStrip = $('scan-strip');
+  const tickerTxt = $('ticker-text');
+  const dot       = $('dot');
+  const canvas    = $('fx');
+  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep   = (ms) => new Promise((r) => setTimeout(r, ms));
+  const randInt = (n) => Math.floor(Math.random() * n);
+  const pad     = (n, len = 3) => String(n).padStart(len, '0');
+  const lerp    = (a, b, t) => a + (b - a) * t;
+  /* =========================================================
+   *  跑马灯
+   * =======================================================*/
+  tickerTxt.textContent = [
+    'EC-4483', 'ARCHIVE DESCENT', 'AES-256-ECB', 'SECTOR 7G', 'NODE 0x4F2A',
+    'SYNC 99.8%', 'KERNEL OK', 'DEPTH 4483', 'CHANNEL SECURE',
+    '0xDEADBEEF', 'FRAME 00000', 'STREAM LOCKED'
+  ].join('  ///  ');
+  /* =========================================================
+   *  Canvas：3D 星流 + 十六进制数字雨
+   * =======================================================*/
+  const ctx = canvas.getContext('2d', { alpha: true });
+  let W = 0, H = 0, CX = 0, CY = 0, FOV = 800, DPR = 1;
+  const STAR_COUNT = REDUCED ? 140 : 520;
+  const stars = [];
+  let rainCols = [];
+  function resizeCanvas() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width  = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.lineCap = 'round';
+    CX = W / 2;
+    CY = H / 2;
+    FOV = Math.min(W, H) * 0.55;
+  }
+  function seedStars() {
+    stars.length = 0;
+    for (let i = 0; i < STAR_COUNT; i++) {
+      const s = { x: 0, y: 0, z: 0, hue: 140, ox: null, oy: null };
+      resetStar(s, true);
+      stars.push(s);
+    }
+  }
+  function resetStar(s, initial) {
+    s.x = (Math.random() * 2 - 1) * 1.3;
+    s.y = (Math.random() * 2 - 1) * 1.3;
+    s.z = initial ? Math.random() * 0.9 + 0.1 : 1;
+    s.hue = Math.random() < 0.14 ? 45 : 140;
+    s.ox = null;
+    s.oy = null;
+  }
+  function seedRain() {
+    const step = 44;
+    const n = Math.ceil(W / step);
+    rainCols = [];
+    for (let i = 0; i < n; i++) {
+      const chars = [];
+      for (let j = 0; j < 10; j++) {
+        chars.push(randInt(16).toString(16).toUpperCase());
+      }
+      rainCols.push({
+        x: i * step + step / 2,
+        y: Math.random() * H,
+        speed: 110 + Math.random() * 260,
+        chars
+      });
+    }
+  }
+  function drawRain(dt, warp) {
+    if (REDUCED) return;
+    ctx.font = '12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const boost = 0.45 + warp * 0.9;
+    for (let i = 0; i < rainCols.length; i++) {
+      const c = rainCols[i];
+      c.y += c.speed * (dt / 1000) * boost;
+      if (c.y > H + 220) c.y = -220;
+      // 偶尔刷新一个字符
+      if (Math.random() < 0.03) {
+        c.chars[randInt(c.chars.length)] = randInt(16).toString(16).toUpperCase();
+      }
+      for (let j = 0; j < c.chars.length; j++) {
+        const cy = c.y - j * 15;
+        if (cy < -20 || cy > H + 20) continue;
+        const a = (1 - j / c.chars.length) * 0.15;
+        ctx.fillStyle = 'rgba(0, 255, 65, ' + a + ')';
+        ctx.fillText(c.chars[j], c.x, cy);
+      }
+    }
+  }
+  function drawStars(dt, warp) {
+    const step = dt * 0.0011 * (0.35 + warp * 1.25);
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i];
+      s.z -= step;
+      if (s.z <= 0.055) {
+        resetStar(s, false);
+        continue;
+      }
+      const k = FOV / s.z;
+      const sx = CX + s.x * k;
+      const sy = CY + s.y * k;
+      if (s.ox !== null) {
+        const fade = Math.min(1, (1 - s.z) * 1.25);
+        const alpha = fade * 0.85;
+        const lw = fade * 2.6 + 0.4;
+        ctx.beginPath();
+        ctx.moveTo(s.ox, s.oy);
+        ctx.lineTo(sx, sy);
+        ctx.strokeStyle = 'hsla(' + s.hue + ', 100%, 62%, ' + alpha + ')';
+        ctx.lineWidth = lw;
+        ctx.stroke();
+      }
+      s.ox = sx;
+      s.oy = sy;
+    }
+  }
+  /* =========================================================
+   *  主循环
+   * =======================================================*/
+  let warp = 0.05;
+  let warpTarget = 0.05;
+  let raf = null;
+  let lastT = 0;
+  let depth = 0;
+  let frameTick = 0;
+  let lastPersp = 0;
+  function loop(now) {
+    const dt = Math.min(now - lastT, 50);
+    lastT = now;
+    // warp 平滑逼近目标
+    warp = lerp(warp, warpTarget, Math.min(1, dt * 0.0026));
+    ctx.clearRect(0, 0, W, H);
+    drawRain(dt, warp);
+    drawStars(dt, warp);
+    // 透视联动：加速时视野收紧
+    const persp = 1200 - warp * 280;
+    if (Math.abs(persp - lastPersp) > 0.6) {
+      lastPersp = persp;
+      shaft.style.setProperty('--persp', persp.toFixed(1) + 'px');
+    }
+    // HUD 数值（节流：每 2 帧更新一次）
+    frameTick++;
+    if (frameTick % 2 === 0) {
+      depth += dt * 0.001 * (warp * 900 + 20);
+      if (depth > 4483) depth = 4483;
+      depthVal.textContent = pad(Math.floor(depth), 5);
+      progress.style.transform = 'scaleX(' + (depth / 4483).toFixed(4) + ')';
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  function startLoop() {
+    if (raf !== null) return;
+    lastT = performance.now();
+    raf = requestAnimationFrame(loop);
+  }
+  function stopLoop() {
+    if (raf !== null) {
+      cancelAnimationFrame(raf);
+      raf = null;
+    }
+  }
+  /* =========================================================
+   *  字幕（带淡入淡出 + 竞态保护）
+   * =======================================================*/
+  let subToken = 0;
+  async function setSubtitle(zh, en) {
+    const token = ++subToken;
+    subs.classList.add('is-out');
+    await sleep(160);
+    if (token !== subToken) return;
+    subZh.textContent = zh;
+    subEn.textContent = en;
+    subs.classList.remove('is-out');
+  }
+  function setStatus(text) {
+    sysStatus.textContent = text;
+  }
+  /* =========================================================
+   *  档案架
+   * =======================================================*/
+  function spawnRack(duration) {
+    const rack = document.createElement('div');
+    rack.className = 'archive-rack';
+    rack.style.animationDuration = duration + 's';
+    const idA = document.createElement('div');
+    idA.className = 'archive-id';
+    idA.textContent = 'EC-' + (1000 + randInt(9000));
+    const divider = document.createElement('div');
+    divider.className = 'rack-divider';
+    const idB = document.createElement('div');
+    idB.className = 'archive-id' + (Math.random() < 0.3 ? ' is-alt' : '');
+    idB.textContent = 'FILE_' + Math.random().toString(36).slice(2, 9).toUpperCase().padEnd(7, '0');
+    rack.append(idA, divider, idB);
+    rack.addEventListener('animationend', () => rack.remove(), { once: true });
+    shaft.appendChild(rack);
+  }
+  let spawnTimer = null;
+  function startSpawning(interval, duration) {
+    stopSpawning();
+    spawnRack(duration);
+    spawnTimer = setInterval(() => spawnRack(duration), interval);
+  }
+  function stopSpawning() {
+    if (spawnTimer !== null) {
+      clearInterval(spawnTimer);
+      spawnTimer = null;
+    }
+  }
+  /* =========================================================
+   *  楼层数字滚动
+   * =======================================================*/
+  let floorTimer = null;
+  function startFloorRoll() {
+    stopFloorRoll();
+    floorTimer = setInterval(() => {
+      floorTag.textContent = 'F-' + pad(randInt(100), 2);
+    }, 105);
+  }
+  function stopFloorRoll() {
+    if (floorTimer !== null) {
+      clearInterval(floorTimer);
+      floorTimer = null;
+    }
+  }
+  /* =========================================================
+   *  故障切片
+   * =======================================================*/
+  function glitchBurst() {
+    const n = 2 + randInt(3);
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement('div');
+      el.className = 'glitch-slice';
+      el.style.top = (Math.random() * 100) + '%';
+      el.style.height = (1 + Math.random() * 22) + 'px';
+      el.style.setProperty('--tx', (randInt(60) - 30) + 'px');
+      el.style.background = Math.random() < 0.55
+        ? 'rgba(0, 255, 65, .34)'
+        : 'rgba(255, 255, 255, .26)';
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove(), { once: true });
+    }
+  }
+  let glitchTimer = null;
+  function startGlitchLoop() {
+    stopGlitchLoop();
+    const tick = () => {
+      glitchBurst();
+      glitchTimer = setTimeout(tick, 200 + Math.random() * 520);
+    };
+    glitchTimer = setTimeout(tick, 260);
+  }
+  function stopGlitchLoop() {
+    if (glitchTimer !== null) {
+      clearTimeout(glitchTimer);
+      glitchTimer = null;
+    }
+  }
+  /* =========================================================
+   *  LVL 缓动计数
+   * =======================================================*/
+  function countUp(el, to, duration, format) {
+    const t0 = performance.now();
+    const easeOutCubic = (p) => 1 - Math.pow(1 - p, 3);
+    function frame(now) {
+      const p = Math.min(1, (now - t0) / duration);
+      el.textContent = format(Math.round(easeOutCubic(p) * to));
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  /* =========================================================
+   *  主时间线
+   * =======================================================*/
+  async function main() {
+    resizeCanvas();
+    seedStars();
+    seedRain();
+    startLoop();
+    // ---- 阶段 1：通电 ----
+    setSubtitle('系统通电，正在初始化底层协议…', 'SYSTEM POWER ON, INITIALIZING KERNEL…');
+    bootLine.classList.add('is-booting');
+    warpTarget = 0.06;
+    await sleep(1600);
+    bootLine.remove();
+    hud.classList.add('is-live');
+    countUp(lvlCount, 99, 1800, (n) => 'LVL ' + pad(n, 3));
+    // ---- 阶段 2：缓慢下潜 ----
+    warpTarget = 0.3;
+    startSpawning(320, 4.2);
+    setStatus('SYSTEM STATUS: DESCENT');
+    // ---- 阶段 3：加速 ----
+    await sleep(1400);
+    setSubtitle('深度下潜：进入档案核心区…', 'DEEP DESCENT: ACCESSING ARCHIVE CORE…');
+    warpTarget = 2.3;
+    startSpawning(85, 0.9);
+    startFloorRoll();
+    if (!REDUCED) {
+      shaft.classList.add('is-jitter');
+      startGlitchLoop();
+    }
+    // ---- 阶段 4：减速抵达 ----
+    await sleep(2500);
+    stopSpawning();
+    stopFloorRoll();
+    stopGlitchLoop();
+    shaft.classList.remove('is-jitter');
+    warpTarget = 0.28;
+    setSubtitle('抵达终端层，正在建立同步链接…', 'TERMINAL REACHED, ESTABLISHING SYNC…');
+    floorTag.textContent = 'TERMINAL';
+    floorTag.classList.add('is-terminal');
+    setStatus('SYSTEM STATUS: SYNC');
+    scanStrip.classList.add('is-live');
+    if (!REDUCED) {
+      scanStrip.animate(
+        [{ transform: 'translateY(0)' }, { transform: 'translateY(150vh)' }],
+        { duration: 2000, easing: 'linear', fill: 'forwards' }
+      );
+    }
+    // ---- 阶段 5：授权 ----
+    await sleep(1600);
+    setSubtitle('授权确认。会话开启。', 'ACCESS CONFIRMED. SESSION START.');
+    setStatus('SESSION: LIVE');
+    warpTarget = 0.08;
+    // ---- 阶段 6：收束 ----
+    await sleep(900);
+    stopLoop();
+    screenEl.classList.add('screen-collapse');
+    await sleep(820);
+    dot.classList.add('is-on');
+  }
+  /* =========================================================
+   *  启动（等字体就绪，最多等 1.2s）
+   * =======================================================*/
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    main();
+  }
+  const fontReady = (document.fonts && document.fonts.ready)
+    ? document.fonts.ready.catch(() => {})
+    : Promise.resolve();
+  Promise.race([fontReady, sleep(1200)]).then(start);
+  window.addEventListener('load', start, { once: true });
+  /* =========================================================
+   *  窗口变化 / 标签页隐藏
+   * =======================================================*/
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    if (resizeTimer !== null) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      resizeCanvas();
+      seedStars();
+      seedRain();
+    }, 160);
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopLoop();
+    } else if (started) {
+      startLoop();
+    }
+  });
+})();
+</script>
+<script>
+/* ===== 接入豆包网站：完成/跳过后通知父页面 ===== */
+(function () {
+  var inFrame = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
+  function post(m) { if (inFrame) { try { parent.postMessage(m, '*'); } catch (e) {} } }
+  // 动画自然结束：监听关机残点 #dot 出现 .is-on，即 collapse 收束完成
+  var dotEl = document.getElementById('dot');
+  if (dotEl) {
+    var mo = new MutationObserver(function (ms) {
+      for (var i = 0; i < ms.length; i++) {
+        if (ms[i].type === 'attributes' && ms[i].target === dotEl && dotEl.classList.contains('is-on')) {
+          post('ARCHIVE_INTRO_DONE');
+          mo.disconnect();
+          break;
+        }
+      }
+    });
+    mo.observe(dotEl, { attributes: true, attributeFilter: ['class'] });
+  }
+  // 转发按键（Escape / Enter / 空格）供父页面跳过
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') post('ARCHIVE_INTRO_SKIP');
+  });
+  // 兜底：12.5s 后无论如何通知完成（防止监听遗漏）
+  setTimeout(function () { post('ARCHIVE_INTRO_DONE'); }, 12500);
+})();
+</script>
+<script>
+/* ===== 开机序列音效：WebAudio 合成（遵守网站「音效开关」wa_sfx_muted / wa_sfx_vol）===== */
+(function () {
+  'use strict';
+  function ls(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  if (ls('wa_sfx_muted') === '1') return;          // 网站音效已关 → 开场静音
+  var vol = (function(){ var v = parseFloat(ls('wa_sfx_vol') || '0.5'); return isFinite(v) ? Math.max(0, Math.min(1, v)) : 0.5; })();
+
+  var ctx = null, master = null;
+  function ensure() {
+    if (ctx) return ctx;
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      ctx = new Ctx();
+      master = ctx.createGain();
+      master.gain.value = vol;
+      master.connect(ctx.destination);
+      return ctx;
+    } catch (e) { return null; }
+  }
+  function resume(){ if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} } }
+
+  function tone(o) {
+    if (!ensure()) return;
+    var t = ctx.currentTime + (o.at || 0);
+    var osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = o.type || 'sine';
+    osc.frequency.setValueAtTime(o.freq, t);
+    if (o.to) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.to), t + (o.dur || 0.3));
+    var peak = o.vol != null ? o.vol : 0.2, atk = o.atk != null ? o.atk : 0.004;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(peak, t + atk);
+    g.gain.setValueAtTime(peak, t + (o.hold != null ? o.hold : 0.02));
+    g.gain.linearRampToValueAtTime(0.0001, t + (o.dur || 0.3));
+    osc.connect(g); g.connect(master);
+    osc.start(t); osc.stop(t + (o.dur || 0.3) + 0.08);
+  }
+  function noise(o) {
+    if (!ensure()) return;
+    var t = ctx.currentTime + (o.at || 0);
+    var len = Math.floor(ctx.sampleRate * (o.dur || 0.3));
+    var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (o.decay ? (1 - i / len) : 1);
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var g = ctx.createGain(); g.gain.value = o.vol != null ? o.vol : 0.15;
+    if (o.freq) { var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.freq; src.connect(f); f.connect(g); }
+    else { src.connect(g); }
+    g.connect(master);
+    src.start(t); src.stop(t + (o.dur || 0.3));
+  }
+  function droneHum() {   // 通电低频嗡鸣（约 0→1.7s）
+    if (!ensure()) return;
+    var t = ctx.currentTime;
+    var osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(38, t);
+    osc.frequency.exponentialRampToValueAtTime(118, t + 1.5);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.10 * vol, t + 0.25);
+    g.gain.setValueAtTime(0.10 * vol, t + 1.35);
+    g.gain.linearRampToValueAtTime(0.0001, t + 1.7);
+    osc.connect(g); g.connect(master);
+    osc.start(t); osc.stop(t + 1.8);
+  }
+  function windNoise() {  // 下潜气流（约 1.4→5.5s，随加速爬升）
+    if (!ensure()) return;
+    var t = ctx.currentTime;
+    var len = Math.floor(ctx.sampleRate * 5.5);
+    var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * 0.7;
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 420;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0, t + 1.3);
+    g.gain.linearRampToValueAtTime(0.30 * vol, t + 3.4);
+    g.gain.setValueAtTime(0.30 * vol, t + 5.35);
+    g.gain.linearRampToValueAtTime(0.0001, t + 5.6);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t); src.stop(t + 5.62);
+  }
+  function run() {
+    if (!ensure()) return;
+    noise({ at: 0, dur: 0.35, vol: 0.16 * vol, decay: true });      // 通电静电
+    droneHum();
+    windNoise();
+    tone({ at: 3.0, type: 'sawtooth', freq: 180, to: 820, dur: 0.32, vol: 0.16 * vol, atk: 0.01 });  // 加速扫频
+    for (var i = 0; i < 5; i++) tone({ at: 3.1 + i * 0.55, freq: 1180, dur: 0.05, vol: 0.06 * vol });  // 数据"滴"
+    tone({ at: 5.5, type: 'sine', freq: 55, to: 34, dur: 0.3, vol: 0.34 * vol, atk: 0.002, hold: 0.08 });  // 抵达"咚"
+    tone({ at: 5.62, freq: 700, dur: 0.1, vol: 0.12 * vol });
+    tone({ at: 5.74, freq: 1010, dur: 0.14, vol: 0.12 * vol });
+    tone({ at: 7.1, freq: 660, dur: 0.9, vol: 0.13 * vol, atk: 0.004 });   // 授权上行钟声
+    tone({ at: 7.18, freq: 880, dur: 0.9, vol: 0.13 * vol, atk: 0.004 });
+    tone({ at: 7.27, freq: 1100, dur: 1.0, vol: 0.12 * vol, atk: 0.004 });
+    tone({ at: 8.0, type: 'sawtooth', freq: 300, to: 46, dur: 0.55, vol: 0.18 * vol, atk: 0.01 });     // 收束下滑音
+    noise({ at: 8.58, dur: 0.02, vol: 0.12 * vol });                    // 末端"咔"
+  }
+  function arm() {
+    ensure(); resume();
+    if (ctx && ctx.state === 'running') { run(); return; }
+    var started = false;
+    function cleanup() {
+      document.removeEventListener('pointerdown', fire);
+      document.removeEventListener('keydown', fire);
+      document.removeEventListener('touchend', fire);
+      if (ctx) ctx.removeEventListener('statechange', onState);
+    }
+    function fire() { if (started) return; started = true; cleanup(); ensure(); resume(); run(); }
+    function onState(){ if (ctx && ctx.state === 'running') fire(); }
+    if (ctx) ctx.addEventListener('statechange', onState);
+    document.addEventListener('pointerdown', fire);
+    document.addEventListener('keydown', fire);
+    document.addEventListener('touchend', fire);
+  }
+  // 开机时刻：监听 #boot-line 出现 is-booting（≈ main() 通电起点）后启动音效
+  var b = document.getElementById('boot-line');
+  if (b) {
+    var mo = new MutationObserver(function () { mo.disconnect(); arm(); });
+    mo.observe(b, { attributes: true, attributeFilter: ['class'] });
+    if (b.classList.contains('is-booting')) { mo.disconnect(); arm(); }
+  }
+})();
+</script>
+</body>
+</html>
