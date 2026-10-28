@@ -2898,7 +2898,7 @@ body.sidebar-open #main-content {
   font-size: 15px;
   line-height: 2;
   color: var(--text);
-  max-width: 720px;          /* 阅读行宽：宽屏下避免过长行距 */
+  max-width: 780px;          /* 阅读行宽：适当放宽减少两侧黑空，仍保可读 */
   margin-left: auto;
   margin-right: auto;
 }
@@ -3056,6 +3056,9 @@ body.focus-reading #sidebar,
 body.focus-reading #sidebar-overlay,
 body.focus-reading #archive-footer{ display: none !important; }
 body.focus-reading #main-content{ max-width: 1040px; padding-top: 24px; }
+body.focus-reading .detail-wrap{ max-width: 1040px; }  /* 专注：详情容器跟随主容器放宽 */
+body.focus-reading .toc-nav{ display: none; }  /* 专注：隐藏右侧章节目录，正文独占全宽 */
+body.focus-reading .detail-body{ max-width: 940px; grid-column: 1 / -1; }  /* 专注：正文横跨全宽，消除两侧大片黑空 */
 .drb-focus.active{ border-color: var(--gold); color: var(--gold); }
 body.focus-reading .detail-card{ box-shadow: none; }
 @media (prefers-reduced-motion: reduce){ .drb-focus.active{ transition: none; } }
