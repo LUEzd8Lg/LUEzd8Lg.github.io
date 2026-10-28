@@ -3989,7 +3989,7 @@
             <div class="planet-title">盖亚 · 全息观测</div>
             <div class="planet-title-en">GAIA-04 · HOLOGRAPHIC SURVEY</div>
           </div>
-          <div class="planet-hint">四洲轮廓已校准 · 拖拽旋转 · 滚轮缩放</div>
+          <div class="planet-hint">四洲轮廓已校准 · 拖拽旋转 · 滚轮放大可切至 36 大区平面视图</div>
         </div>
         <div class="planet-stage">
           <canvas class="planet-canvas" id="planet-canvas"></canvas>

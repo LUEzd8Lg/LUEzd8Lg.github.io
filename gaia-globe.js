@@ -17,6 +17,54 @@
     {"id":"nan","label":"南洲","color":"#a98fb8","pts":[[-83.66,-18.49],[-82.23,-18.29],[-78.14,-21.16],[-72,-19.11],[-65.45,-22.81],[-60.95,-22.81],[-58.09,-28.56],[-51.14,-32.26],[-49.09,-32.26],[-47.05,-29.79],[-43.77,-32.26],[-37.23,-32.26],[-34.77,-30.62],[-31.5,-30.21],[-28.84,-40.68],[-27.41,-42.12],[-25.36,-42.12],[-24.55,-44.18],[-21.48,-44.79],[-21.07,-49.73],[-22.3,-54.66],[-27.2,-57.53],[-29.45,-62.26],[-31.91,-62.26],[-35.18,-60.62],[-39.89,-64.52],[-40.91,-66.78],[-45.82,-65.14],[-52.36,-67.19],[-55.23,-65.14],[-58.5,-64.73],[-62.18,-61.44],[-70.36,-62.26],[-72.82,-59.79],[-80.18,-59.79],[-81.82,-61.85],[-85.5,-61.85],[-90.41,-66.37],[-96.14,-67.19],[-94.7,-63.7],[-95.32,-62.26],[-98.59,-63.08],[-103.3,-62.47],[-103.7,-56.3],[-101.25,-52.6],[-103.09,-50.34],[-105.75,-50.14],[-105.75,-46.85],[-102.48,-43.97],[-103.7,-42.74],[-104.11,-38.63],[-107.8,-34.93],[-105.55,-34.32],[-104.11,-31.23],[-100.64,-28.56],[-93.68,-28.15],[-90.41,-23.22],[-87.55,-21.16],[-85.91,-21.16],[-83.86,-18.7]]}
   ]};
 
+  /* ---------- 36 大区数据（内嵌兜底 + 外部 data/regions.json 覆盖） ---------- */
+  const REGIONS_INLINE = {"regions":[
+    {"id":"Z01","name":"极北高原","cont":"zhong","lonW":-30,"lonE":-12,"latS":6.67,"latN":20},
+    {"id":"Z02","name":"永霜台","cont":"zhong","lonW":-12,"lonE":6,"latS":6.67,"latN":20},
+    {"id":"Z03","name":"白曐原","cont":"zhong","lonW":6,"lonE":24,"latS":6.67,"latN":20},
+    {"id":"Z04","name":"赤冕岭","cont":"zhong","lonW":24,"lonE":42,"latS":6.67,"latN":20},
+    {"id":"Z05","name":"雾岸","cont":"zhong","lonW":42,"lonE":60,"latS":6.67,"latN":20},
+    {"id":"Z06","name":"西陲荒原","cont":"zhong","lonW":-30,"lonE":-12,"latS":-6.67,"latN":6.67},
+    {"id":"Z07","name":"议会盆地","cont":"zhong","lonW":-12,"lonE":6,"latS":-6.67,"latN":6.67},
+    {"id":"Z08","name":"红月京","cont":"zhong","lonW":6,"lonE":24,"latS":-6.67,"latN":6.67},
+    {"id":"Z09","name":"灰岩台地","cont":"zhong","lonW":24,"lonE":42,"latS":-6.67,"latN":6.67},
+    {"id":"Z10","name":"东垣","cont":"zhong","lonW":42,"lonE":60,"latS":-6.67,"latN":6.67},
+    {"id":"Z11","name":"南界荒原","cont":"zhong","lonW":-30,"lonE":-12,"latS":-20,"latN":-6.67},
+    {"id":"Z12","name":"锈石谷","cont":"zhong","lonW":-12,"lonE":6,"latS":-20,"latN":-6.67},
+    {"id":"Z13","name":"中央裂谷","cont":"zhong","lonW":6,"lonE":24,"latS":-20,"latN":-6.67},
+    {"id":"Z14","name":"清道夫领","cont":"zhong","lonW":24,"lonE":42,"latS":-20,"latN":-6.67},
+    {"id":"Z15","name":"末端海","cont":"zhong","lonW":42,"lonE":60,"latS":-20,"latN":-6.67},
+    {"id":"B01","name":"永夜森林","cont":"bei","lonW":-40,"lonE":-3.33,"latS":58.33,"latN":75},
+    {"id":"B02","name":"极光台","cont":"bei","lonW":-3.33,"lonE":33.33,"latS":58.33,"latN":75},
+    {"id":"B03","name":"诺克图恩领","cont":"bei","lonW":33.33,"lonE":70,"latS":58.33,"latN":75},
+    {"id":"B04","name":"寒苔原","cont":"bei","lonW":-40,"lonE":-3.33,"latS":41.67,"latN":58.33},
+    {"id":"B05","name":"中央雪林","cont":"bei","lonW":-3.33,"lonE":33.33,"latS":41.67,"latN":58.33},
+    {"id":"B06","name":"白鳞湾","cont":"bei","lonW":33.33,"lonE":70,"latS":41.67,"latN":58.33},
+    {"id":"B07","name":"南松林","cont":"bei","lonW":-40,"lonE":-3.33,"latS":25,"latN":41.67},
+    {"id":"B08","name":"冰脊原","cont":"bei","lonW":-3.33,"lonE":33.33,"latS":25,"latN":41.67},
+    {"id":"B09","name":"守夜关","cont":"bei","lonW":33.33,"lonE":70,"latS":25,"latN":41.67},
+    {"id":"S01","name":"梦潮湾","cont":"nan","lonW":-20,"lonE":10,"latS":-25,"latN":-15},
+    {"id":"S02","name":"瓦洛斯白雾","cont":"nan","lonW":10,"lonE":40,"latS":-25,"latN":-15},
+    {"id":"S03","name":"裂谷西段","cont":"nan","lonW":-20,"lonE":10,"latS":-35,"latN":-25},
+    {"id":"S04","name":"裂谷东段","cont":"nan","lonW":10,"lonE":40,"latS":-35,"latN":-25},
+    {"id":"S05","name":"南裂谷","cont":"nan","lonW":-20,"lonE":10,"latS":-45,"latN":-35},
+    {"id":"S06","name":"雾沼","cont":"nan","lonW":10,"lonE":40,"latS":-45,"latN":-35},
+    {"id":"S07","name":"白霜滩","cont":"nan","lonW":-20,"lonE":40,"latS":-55,"latN":-45},
+    {"id":"E01","name":"东屿","cont":"dong","lonW":50,"lonE":120,"latS":-2,"latN":10},
+    {"id":"E02","name":"阿库拉领","cont":"dong","lonW":50,"lonE":120,"latS":-14,"latN":-2},
+    {"id":"E03","name":"低语海沟","cont":"dong","lonW":50,"lonE":120,"latS":-26,"latN":-14},
+    {"id":"E04","name":"珊瑚礁原","cont":"dong","lonW":50,"lonE":120,"latS":-38,"latN":-26},
+    {"id":"E05","name":"南屿尾","cont":"dong","lonW":50,"lonE":120,"latS":-50,"latN":-38}
+  ]};
+  let REGIONS = REGIONS_INLINE.regions;
+  (function loadRegions() {
+    if (typeof fetch !== 'function') return;
+    fetch('data/regions.json').then(r => r.json()).then(j => {
+      if (j && Array.isArray(j.regions) && j.regions.length) REGIONS = j.regions;
+    }).catch(() => {});
+  })();
+  const CONT_COLOR = { zhong: '#c9a227', bei: '#7fa8c9', nan: '#a98fb8', dong: '#c9a86a' };
+
   function readPalette() {
     let gold = '#c9a227', ice = '#7fa8c9', dim = '#5a6a78';
     try {
@@ -41,7 +89,10 @@
     let stars = [];
     let rotY = -0.6, rotX = 0.16;        // 当前姿态（弧度）
     let velY = 0;                        // 拖拽惯性
-    let zoom = 1;                        // 缩放（仅 full）
+    let zoom = 1;                        // 缩放（放大超过阈值进入平面视图模式）
+    let planeMode = false;               // 是否已进入平面视图（区域放大）
+    let planeLon = 0, planeLat = 0;      // 平面视图中心经纬
+    const PLANE_ZOOM = 1.6;              // 放大超过此值 → 球面切平面视图
     let moonA = 0.9;                     // 红月轨道角
     let dragging = false, lastX = 0, lastY = 0, moved = 0;
     let raf = null, alive = true, visible = true, lastT = 0;
@@ -258,6 +309,7 @@
 
     /* ---------- 绘制 ---------- */
     function draw(t) {
+      if (zoom > PLANE_ZOOM) { drawPlane(t); return; }
       ctx.clearRect(0, 0, W, H);
 
       /* 星空 */
@@ -416,6 +468,76 @@
       }
     }
 
+    /* ---------- 平面视图（放大到区级：画 36 大区边界 + 编号 + 名称 + 中心点） ---------- */
+    function drawPlane(t) {
+      if (!planeMode) {
+        planeMode = true;
+        planeLon = -rotY * 180 / Math.PI;
+        planeLat = -rotX * 180 / Math.PI * 0.5;
+      }
+      const spanLon = 80 / (zoom - PLANE_ZOOM + 1);
+      const spanLat = spanLon * (H / W);
+      const lonMin = planeLon - spanLon / 2, lonMax = planeLon + spanLon / 2;
+      const latMax = planeLat + spanLat / 2, latMin = planeLat - spanLat / 2;
+
+      ctx.clearRect(0, 0, W, H);
+      /* 深空背景 */
+      ctx.fillStyle = 'rgba(4,7,11,0.98)'; ctx.fillRect(0, 0, W, H);
+      /* 星光 */
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        const tw = reduced ? 0.6 : 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 0.001 * s.sp + s.ph));
+        ctx.globalAlpha = tw * (s.red ? 0.9 : 0.6);
+        ctx.fillStyle = s.red ? '#c66a5a' : '#c8d4e2';
+        ctx.fillRect(s.x, s.y, s.r, s.r);
+      }
+      ctx.globalAlpha = 1;
+      /* 视野底纹 */
+      const bg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.min(W, H) * 0.6);
+      bg.addColorStop(0, 'rgba(16,22,28,0.9)'); bg.addColorStop(1, 'rgba(6,9,13,0.98)');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      /* 经纬网格 */
+      ctx.strokeStyle = 'rgba(140,175,205,0.12)'; ctx.lineWidth = 1;
+      for (let lon = Math.floor(lonMin / 10) * 10; lon <= lonMax; lon += 10) {
+        const x = (lon - lonMin) / spanLon * W;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let lat = Math.floor(latMin / 10) * 10; lat <= latMax; lat += 10) {
+        const y = (latMax - lat) / spanLat * H;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+      /* 36 大区 */
+      for (const r of REGIONS) {
+        const x1 = (r.lonW - lonMin) / spanLon * W, x2 = (r.lonE - lonMin) / spanLon * W;
+        const y1 = (latMax - r.latN) / spanLat * H, y2 = (latMax - r.latS) / spanLat * H;
+        if (x2 < -20 || x1 > W + 20 || y2 < -20 || y1 > H + 20) continue;
+        const col = CONT_COLOR[r.cont] || '#c9a227';
+        ctx.fillStyle = 'rgba(201,162,39,0.045)';
+        ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+        ctx.strokeStyle = col; ctx.globalAlpha = 0.65; ctx.lineWidth = 1.2;
+        ctx.strokeRect(x1 + 0.5, y1 + 0.5, x2 - x1 - 1, y2 - y1 - 1);
+        ctx.globalAlpha = 1;
+        const cxp = ((r.lonW + r.lonE) / 2 - lonMin) / spanLon * W;
+        const cyp = (latMax - (r.latN + r.latS) / 2) / spanLat * H;
+        ctx.beginPath(); ctx.arc(cxp, cyp, 2.6, 0, TAU); ctx.fillStyle = col; ctx.fill();
+        const fs = Math.max(10, 12 + (zoom - PLANE_ZOOM) * 8);
+        ctx.font = `${fs}px "Courier New", monospace`;
+        ctx.fillStyle = 'rgba(222,230,238,0.92)';
+        const widId = ctx.measureText(r.id + '  ').width;
+        ctx.fillText(r.id, x1 + 6, y1 + fs + 2);
+        ctx.fillStyle = col;
+        ctx.fillText(r.name, x1 + 6 + widId, y1 + fs + 2);
+      }
+      /* HUD */
+      ctx.strokeStyle = 'rgba(201,162,39,0.4)'; ctx.lineWidth = 1;
+      ctx.strokeRect(8, 8, W - 16, H - 16);
+      ctx.fillStyle = 'rgba(201,162,39,0.85)';
+      ctx.font = '10px "Courier New", monospace';
+      ctx.fillText('GAIA · REGIONAL SURVEY   lon ' + lonMin.toFixed(1) + '°..' + lonMax.toFixed(1) + '°   lat ' + latMin.toFixed(1) + '°..' + latMax.toFixed(1) + '°   zoom ' + zoom.toFixed(1) + 'x', 16, H - 18);
+      ctx.fillStyle = 'rgba(150,170,195,0.5)';
+      ctx.fillText('滚轮继续放大 · 拖拽平移 · 缩小回星球', 16, 22);
+    }
+
     /* ---------- 帧循环 ---------- */
     function frame(t) {
       if (!alive) return;
@@ -443,6 +565,13 @@
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       lastX = e.clientX; lastY = e.clientY;
       moved += Math.abs(dx) + Math.abs(dy);
+      if (zoom > PLANE_ZOOM) {
+        const spanLon = 80 / (zoom - PLANE_ZOOM + 1);
+        const spanLat = spanLon * (H / W);
+        planeLon -= dx * spanLon / W;
+        planeLat -= dy * spanLat / H;
+        return;
+      }
       rotY += dx * 0.005;
       rotX = Math.max(-1.1, Math.min(1.1, rotX + dy * 0.004));
       velY = dx * 0.12;
@@ -453,7 +582,7 @@
     }
     function onWheel(e) {
       e.preventDefault();
-      zoom = Math.max(0.75, Math.min(1.8, zoom * (e.deltaY > 0 ? 0.92 : 1.09)));
+      zoom = Math.max(0.75, Math.min(5, zoom * (e.deltaY > 0 ? 0.92 : 1.09)));
       R = Math.min(W, H) * 0.33 * zoom;
     }
 
