@@ -3204,9 +3204,11 @@
     // 导航音效（排除初始空hash进入的情况）
     if (window._routedOnce) SFX.navigate();
     window._routedOnce = true;
+    destroyGlobe(); // 切换视图前销毁星球实例，防止 rAF 泄漏
 
     const doRender = () => {
       if (parts.length === 0) renderHome();
+      else if (parts[0] === 'planet') renderPlanet();
       else if (parts[0] === 'search') renderSearch(query.get('q') || '');
       else if (parts[0] === 'glossary') renderGlossary();
       else if (parts[0] === 'canon') renderCanon();
@@ -3969,6 +3971,60 @@
       document.querySelectorAll('.section-block, .motto, .core-item, .tl-item, .cat-card')
         .forEach(el => el.classList.add('in-view'));
     }, 8000);
+  }
+
+  // ============ 盖亚全息星球（gaia-stage3d.js WebGL / gaia-globe.js 2D 兜底） ============
+  let _ggHandle = null;
+  function destroyGlobe() {
+    if (_ggHandle) { try { _ggHandle.destroy(); } catch (e) {} _ggHandle = null; }
+  }
+
+  function mountPlanetStage() {
+    let canvas = document.getElementById('planet-canvas');
+    if (!canvas) return;
+    destroyGlobe();
+    /* 换一块干净的 canvas，避免同一画布复用 WebGL 上下文 */
+    const fresh = canvas.cloneNode(false);
+    canvas.parentNode.replaceChild(fresh, canvas);
+    canvas = fresh;
+
+    if (window.GaiaStage3D) {
+      _ggHandle = window.GaiaStage3D.mount(canvas, { mode: 'full' });
+    } else if (window.GaiaGlobe) {
+      _ggHandle = window.GaiaGlobe.mount(canvas, { mode: 'full' });
+    }
+  }
+
+  // ============ 星球档案页（盖亚全息观测） ============
+  function renderPlanet() {
+    if (!view) return;
+    view.innerHTML = `
+      <section class="planet-view">
+        <div class="planet-head">
+          <div>
+            <div class="planet-title">盖亚 · 全息观测</div>
+            <div class="planet-title-en">GAIA-04 · HOLOGRAPHIC SURVEY</div>
+          </div>
+          <div class="planet-hint">拖拽旋转 · 滚轮缩放 · 四洲轮廓已校准</div>
+        </div>
+        <div class="planet-stage">
+          <canvas class="planet-canvas" id="planet-canvas" role="img" aria-label="盖亚全息星球：拖拽旋转、滚轮缩放"></canvas>
+          <div class="planet-scanlines"></div>
+          <div class="planet-corner planet-corner-tl"></div>
+          <div class="planet-corner planet-corner-tr"></div>
+          <div class="planet-corner planet-corner-bl"></div>
+          <div class="planet-corner planet-corner-br"></div>
+          <div class="planet-readout">MODE <b>ORBITAL SURVEY</b><br>GRID <b>15° × 15°</b><br>MOON <b>CRIMSON · TRACKING</b></div>
+          <div class="planet-legend">
+            中州 <i style="background:#c9a227"></i><br>
+            北洲 <i style="background:#7fa8c9"></i><br>
+            东洲 <i style="background:#c9a86a"></i><br>
+            南洲 <i style="background:#a98fb8"></i>
+          </div>
+        </div>
+      </section>`;
+    mountPlanetStage();
+    document.title = '盖亚全息观测 · 世界观察档案库';
   }
 
   // ============ HERO 粒子尘埃 ============

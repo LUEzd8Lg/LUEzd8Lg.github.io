@@ -6,9 +6,10 @@
 <title>世界观察档案库 · Worldview Archive</title>
 <link rel="icon" type="image/webp" href="favicon.webp">
 <link rel="shortcut icon" type="image/webp" href="favicon.webp">
-<link rel="stylesheet" href="style.css?v=106">
+<link rel="stylesheet" href="style.css?v=108">
+<link rel="stylesheet" href="pet.css?v=2">
 <link rel="preload" href="data/merged.js?v=48" as="script">
-<link rel="preload" href="app.js?v=109" as="script">
+<link rel="preload" href="app.js?v=113" as="script">
 <link rel="preload" href="data/logo-mark.png" as="image">
 </head>
 <body>
@@ -34,6 +35,7 @@
       </a>
       <nav class="header-nav" id="main-nav">
         <a href="#/" class="nav-link" data-route="/">首页</a>
+        <a href="#/planet" class="nav-link" data-route="/planet">盖亚地缘</a>
         <span id="nav-cats-inline" style="display:contents"></span>
       </nav>
       <div class="header-search">
@@ -112,6 +114,10 @@
         <a href="#/mindmap" class="sidebar-link" data-route="/mindmap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="5" y1="5" x2="7.5" y2="7.5"/><line x1="16.5" y1="16.5" x2="19" y2="19"/><line x1="5" y1="19" x2="7.5" y2="16.5"/><line x1="16.5" y1="7.5" x2="19" y2="5"/></svg>
           <span>思维导图</span>
+        </a>
+        <a href="#/planet" class="sidebar-link" data-route="/planet">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/><ellipse cx="12" cy="12" rx="3.6" ry="9"/></svg>
+          <span>盖亚地缘</span>
         </a>
         <a href="#/library" class="sidebar-link" data-route="/library">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22,19a2,2,0,0,1-2,2H4a2,2,0,0,1-2-2V5a2,2,0,0,1,2-2h5l2,3h9a2,2,0,0,1,2,2z"/></svg>
@@ -373,6 +379,7 @@
           <button type="button" role="tab" class="am-tab" data-tab="favorites">★ 收藏夹</button>
           <button type="button" role="tab" class="am-tab" data-tab="reading">⟲ 阅读进度</button>
           <button type="button" role="tab" class="am-tab" data-tab="cloud">☁ 云同步</button>
+          <button type="button" role="tab" class="am-tab" data-tab="term13">▣ 终端进程</button>
         </div>
         <div class="am-tabpane active" data-tabpane="account">
           <div class="am-info-grid">
@@ -421,6 +428,9 @@
         </div>
         <div class="am-tabpane" data-tabpane="cloud">
           <div id="am-cloud"></div>
+        </div>
+        <div class="am-tabpane" data-tabpane="term13">
+          <div id="t13-panel" class="t13p"></div>
         </div>
       </div>
     </div>
@@ -549,7 +559,12 @@
 </button>
 
 <script defer src="fx.js?v=14"></script>
-<script defer src="app.js?v=109"></script>
+<script defer src="gaia-globe.js?v=10"></script>
+<script defer src="vendor/three.min.js?v=1"></script>
+<script defer src="data/gaia-tex-data.js?v=1"></script>
+<script defer src="gaia-stage3d.js?v=6"></script>
+<script defer src="app.js?v=113"></script>
+<script defer src="pet.js?v=2"></script>
 
 <!-- 路由"过场帘"扫描转场 -->
 <div id="route-wipe" aria-hidden="true"><span class="rw-label">载入档案<span class="rw-dot">_</span></span></div>
