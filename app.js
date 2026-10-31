@@ -220,41 +220,47 @@
     return Object.assign({}, meta, { body });
   }
 
+  // 把 GitHub Issue（或 Worker 返回的 issue 条目）转成投稿对象；已审或非投稿 Issue 返回 null
+  function issueToSubmission(it) {
+    if (!it || it.pull_request || !it.number) return null;
+    if (issueReviewedList().indexOf(it.number) > -1) return null;
+    const meta = parseSubmissionIssue(it.body);
+    if (!meta) return null;
+    return {
+      id: meta.id || ('GH-' + it.number),
+      title: meta.title || String(it.title || '').replace(/^【投稿】/, ''),
+      category: meta.category || 'anomalies',
+      class: meta.class || 'neutral',
+      code: meta.code || '',
+      summary: meta.summary || '',
+      body: meta.body || '',
+      tags: Array.isArray(meta.tags) ? meta.tags : [],
+      source: meta.source || '',
+      cover: '', audio: '',
+      author: meta.author || ((it.user && it.user.login) || it.user || 'GitHub 用户'),
+      authorLevel: 'GitHub',
+      status: 'pending',
+      at: Date.parse(it.created_at) || Date.now(),
+      _githubFile: 'issue#' + it.number,
+      _githubSha: null,
+      _issueNumber: it.number,
+      _issueUrl: it.html_url || ''
+    };
+  }
+
   async function fetchIssueSubmissions() {
+    // 优先走 Worker（绕开浏览器对 api.github.com 的网络限制）
+    const w = await fetchRemoteSubsViaWorker();
+    if (w && Array.isArray(w.issues)) {
+      return w.issues.map(issueToSubmission).filter(Boolean);
+    }
+    // 兜底：直连 GitHub API
     try {
       const res = await fetch(`https://api.github.com/repos/${SUB_REPO.owner}/${SUB_REPO.repo}/issues?state=open&per_page=60&sort=created&direction=desc`);
       if (!res.ok) return [];
       const list = await res.json();
       if (!Array.isArray(list)) return [];
-      const done = issueReviewedList();
-      const out = [];
-      for (const it of list) {
-        if (it.pull_request || !it.number) continue;
-        if (done.indexOf(it.number) > -1) continue;
-        const meta = parseSubmissionIssue(it.body);
-        if (!meta) continue;
-        out.push({
-          id: meta.id || ('GH-' + it.number),
-          title: meta.title || String(it.title || '').replace(/^【投稿】/, ''),
-          category: meta.category || 'anomalies',
-          class: meta.class || 'neutral',
-          code: meta.code || '',
-          summary: meta.summary || '',
-          body: meta.body || '',
-          tags: Array.isArray(meta.tags) ? meta.tags : [],
-          source: meta.source || '',
-          cover: '', audio: '',
-          author: meta.author || ((it.user && it.user.login) || 'GitHub 用户'),
-          authorLevel: 'GitHub',
-          status: 'pending',
-          at: Date.parse(it.created_at) || Date.now(),
-          _githubFile: 'issue#' + it.number,
-          _githubSha: null,
-          _issueNumber: it.number,
-          _issueUrl: it.html_url || ''
-        });
-      }
-      return out;
+      return list.map(issueToSubmission).filter(Boolean);
     } catch (e) { return []; }
   }
 
@@ -326,9 +332,51 @@
     try { localStorage.setItem(SUB_REVIEWED_FILES_KEY, JSON.stringify(l)); } catch (e) {}
   }
 
+  // ============ 后台拉取 · 优先走 Worker（绕开浏览器对 api.github.com 的限制） ============
+  const SUB_WORKER_FALLBACK = 'https://api.starofgaia.cc.cd';
+  let _workerSubsMemo = null;
+  let _workerSubsMemoAt = 0;
+
+  async function workerEndpoint() {
+    const cfg = await fetchSubmissionConfig();
+    return (cfg && cfg.endpoint) || SUB_WORKER_FALLBACK;
+  }
+
+  // 经 Worker 拉取远端稿件（subs + issues），30 秒 memo 避免重复请求；失败返回 null（回落直连）
+  async function fetchRemoteSubsViaWorker() {
+    const now = Date.now();
+    if (_workerSubsMemo && now - _workerSubsMemoAt < 30000) return _workerSubsMemo;
+    try {
+      const ep = await workerEndpoint();
+      const res = await fetch(ep + '?list=all', { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data || !data.ok) return null;
+      _workerSubsMemo = data;
+      _workerSubsMemoAt = now;
+      return data;
+    } catch (e) { return null; }
+  }
+
   async function fetchGitHubSubmissions() {
     const cfg = await fetchSubmissionConfig();
     if (!cfg) return [];
+    // 优先走 Worker（绕开浏览器对 api.github.com 的网络限制）
+    const w = await fetchRemoteSubsViaWorker();
+    if (w && Array.isArray(w.subs)) {
+      const done = reviewedFilesList();
+      const out = [];
+      for (const it of w.subs) {
+        if (!it || !it.path || !it.data) continue;
+        if (done.indexOf(it.path) > -1) continue;
+        const data = Object.assign({}, it.data);
+        data._githubFile = it.path;
+        data._githubSha = it.sha;
+        if (!data.status) data.status = 'pending';
+        out.push(data);
+      }
+      return out;
+    }
     const headers = { 'Accept': 'application/vnd.github+json' };
     const token = submissionToken(cfg);
     if (token) headers['Authorization'] = 'token ' + token;
@@ -365,6 +413,20 @@
 
   async function deleteGitHubSubmission(filePath, sha) {
     if (!filePath || !sha) return false;
+    // 优先走 Worker 删除（无需浏览器持有令牌）
+    try {
+      const ep = await workerEndpoint();
+      const res = await fetch(ep, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', path: filePath, sha: sha })
+      });
+      if (res.ok) {
+        const d = await res.json().catch(() => null);
+        if (d && d.ok) return true;
+      }
+    } catch (e) {}
+    // 兜底：浏览器直连（需本机令牌）
     const cfg = await fetchSubmissionConfig();
     if (!cfg) return false;
     const token = submissionToken(cfg);
