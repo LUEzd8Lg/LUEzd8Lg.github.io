@@ -130,6 +130,252 @@
   function statsCounts() { return computeStats().counts; }
   function statsTotal()  { return computeStats().total; }
 
+  // ============ 投稿送达 · GitHub Issue 通道 ============
+  const SUB_REPO = { owner: 'LUEzd8Lg', repo: 'LUEzd8Lg.github.io' };
+  const SUB_ISSUE_MARK = 'ARCHIVE-SUBMISSION';
+  const ISSUE_REVIEWED_KEY = 'wa_sub_issue_reviewed_v1';
+
+  function issueReviewedList() {
+    try { return JSON.parse(localStorage.getItem(ISSUE_REVIEWED_KEY) || '[]'); } catch { return []; }
+  }
+  function markIssueReviewed(n) {
+    const l = issueReviewedList();
+    if (l.indexOf(n) > -1) return;
+    l.push(n);
+    try { localStorage.setItem(ISSUE_REVIEWED_KEY, JSON.stringify(l)); } catch (e) {}
+  }
+
+  function htmlToPlain(html) {
+    return String(html || '')
+      .replace(/<\s*br\s*\/?>/gi, '\n')
+      .replace(/<\s*\/\s*(p|div|li|h[1-6]|tr)\s*>/gi, '\n')
+      .replace(/<\s*li[^>]*>/gi, '- ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  function buildSubmissionIssue(sub) {
+    const meta = {
+      id: sub.id || '',
+      title: sub.title || '',
+      category: sub.category || '',
+      class: sub.class || '',
+      code: sub.code || '',
+      summary: sub.summary || '',
+      tags: sub.tags || [],
+      source: sub.source || '',
+      author: sub.author || '',
+      at: sub.at || Date.now()
+    };
+    const full = htmlToPlain(sub.body || '');
+    let truncated = false;
+    let body = full;
+    if (body.length > 2400) {
+      body = body.slice(0, 2400) + '\n\n（正文过长已截断，完整正文请附在 Issue 评论或联系管理员）';
+      truncated = true;
+    }
+    const make = (text) => [
+      '<!--' + SUB_ISSUE_MARK + ' v1-->',
+      '```json',
+      JSON.stringify(meta, null, 2),
+      '```',
+      '',
+      '### 正文',
+      '',
+      text,
+      '',
+      '### 附件',
+      '封面 / 音频如需保留，请直接拖进本条 Issue 的附件区。'
+    ].join('\n');
+    let markdown = make(body);
+    let url = 'https://github.com/' + SUB_REPO.owner + '/' + SUB_REPO.repo + '/issues/new?title=' +
+      encodeURIComponent('【投稿】' + (sub.title || '未命名')) + '&body=' + encodeURIComponent(markdown);
+    if (url.length > 7500) {
+      body = body.slice(0, 900) + '\n\n（正文过长已截断，完整正文请附在 Issue 评论或联系管理员）';
+      markdown = make(body);
+      url = 'https://github.com/' + SUB_REPO.owner + '/' + SUB_REPO.repo + '/issues/new?title=' +
+        encodeURIComponent('【投稿】' + (sub.title || '未命名')) + '&body=' + encodeURIComponent(markdown);
+      truncated = true;
+    }
+    return { url, markdown, truncated };
+  }
+
+  function parseSubmissionIssue(text) {
+    const raw = String(text || '');
+    if (raw.indexOf(SUB_ISSUE_MARK) < 0) return null;
+    const m = raw.match(/```json\s*([\s\S]*?)```/i);
+    let meta = {};
+    if (m) {
+      try { meta = JSON.parse(m[1]) || {}; } catch (e) { meta = {}; }
+    }
+    const bi = raw.indexOf('### 正文');
+    let body = bi > -1 ? raw.slice(bi + 6).trim() : '';
+    const ai = body.indexOf('### 附件');
+    if (ai > -1) body = body.slice(0, ai).trim();
+    return Object.assign({}, meta, { body });
+  }
+
+  async function fetchIssueSubmissions() {
+    try {
+      const res = await fetch(`https://api.github.com/repos/${SUB_REPO.owner}/${SUB_REPO.repo}/issues?state=open&per_page=60&sort=created&direction=desc`);
+      if (!res.ok) return [];
+      const list = await res.json();
+      if (!Array.isArray(list)) return [];
+      const done = issueReviewedList();
+      const out = [];
+      for (const it of list) {
+        if (it.pull_request || !it.number) continue;
+        if (done.indexOf(it.number) > -1) continue;
+        const meta = parseSubmissionIssue(it.body);
+        if (!meta) continue;
+        out.push({
+          id: meta.id || ('GH-' + it.number),
+          title: meta.title || String(it.title || '').replace(/^【投稿】/, ''),
+          category: meta.category || 'anomalies',
+          class: meta.class || 'neutral',
+          code: meta.code || '',
+          summary: meta.summary || '',
+          body: meta.body || '',
+          tags: Array.isArray(meta.tags) ? meta.tags : [],
+          source: meta.source || '',
+          cover: '', audio: '',
+          author: meta.author || ((it.user && it.user.login) || 'GitHub 用户'),
+          authorLevel: 'GitHub',
+          status: 'pending',
+          at: Date.parse(it.created_at) || Date.now(),
+          _githubFile: 'issue#' + it.number,
+          _githubSha: null,
+          _issueNumber: it.number,
+          _issueUrl: it.html_url || ''
+        });
+      }
+      return out;
+    } catch (e) { return []; }
+  }
+
+  // ============ 投稿送达 · GitHub 令牌通道（主通道，Issue 为兜底） ============
+  const SUB_CONFIG_PATH = 'data/submissions-config.json';
+  const SUB_TOKEN_KEY = 'wa_submission_token';
+
+  function decodeStoredToken(k) {
+    try { return decodeURIComponent(escape(atob(k))); } catch (e) { return ''; }
+  }
+
+  async function fetchSubmissionConfig() {
+    try {
+      const res = await fetch(SUB_CONFIG_PATH + '?v=' + Date.now());
+      if (!res.ok) return null;
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('application/json') && !ct.includes('text/plain')) return null;
+      const text = await res.text();
+      if (/^\s*<(!DOCTYPE|html)/i.test(text)) return null;
+      const cfg = JSON.parse(text);
+      if (!cfg || !cfg.owner || !cfg.repo) return null;
+      return cfg;
+    } catch (e) { return null; }
+  }
+
+  // 令牌来源：本站投稿令牌 → 后台同步配置 → 仓库内配置（base64）
+  function submissionToken(cfg) {
+    let t = localStorage.getItem(SUB_TOKEN_KEY);
+    if (!t) {
+      try {
+        const s = JSON.parse(localStorage.getItem('wa_github_sync') || '{}');
+        t = s.token || '';
+      } catch (e) { t = ''; }
+    }
+    if (!t && cfg && cfg.k) t = decodeStoredToken(cfg.k);
+    return t || '';
+  }
+
+  // 投稿经 Cloudflare Worker 代理写入仓库（令牌只存在 Worker 环境变量里）
+  async function pushSubmission(sub) {
+    const cfg = await fetchSubmissionConfig();
+    if (!cfg || !cfg.endpoint) return { ok: false, reason: 'no-config' };
+    try {
+      const res = await fetch(cfg.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submission: sub })
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok || !d || !d.ok) {
+        return { ok: false, reason: 'worker', error: (d && d.error) || ('HTTP ' + res.status) };
+      }
+      return { ok: true, path: d.path || '' };
+    } catch (e) {
+      return { ok: false, reason: 'network' };
+    }
+  }
+
+  // 已审远端稿件的文件路径（无令牌时无法删文件，用本地记录过滤）
+  const SUB_REVIEWED_FILES_KEY = 'wa_sub_reviewed_files_v1';
+  function reviewedFilesList() {
+    try { return JSON.parse(localStorage.getItem(SUB_REVIEWED_FILES_KEY) || '[]'); } catch { return []; }
+  }
+  function markFileReviewed(path) {
+    if (!path) return;
+    const l = reviewedFilesList();
+    if (l.indexOf(path) > -1) return;
+    l.push(path);
+    try { localStorage.setItem(SUB_REVIEWED_FILES_KEY, JSON.stringify(l)); } catch (e) {}
+  }
+
+  async function fetchGitHubSubmissions() {
+    const cfg = await fetchSubmissionConfig();
+    if (!cfg) return [];
+    const headers = { 'Accept': 'application/vnd.github+json' };
+    const token = submissionToken(cfg);
+    if (token) headers['Authorization'] = 'token ' + token;
+    try {
+      const res = await fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/submissions?ref=' + (cfg.branch || 'main'), { headers });
+      if (!res.ok) return [];
+      const files = await res.json();
+      if (!Array.isArray(files)) return [];
+      const done = reviewedFilesList();
+      const out = [];
+      for (const f of files) {
+        if (!f.name.endsWith('.json')) continue;
+        if (done.indexOf(f.path) > -1) continue;
+        try {
+          const fr = await fetch(f.download_url);
+          const data = await fr.json();
+          if (!data || !data.title) continue;
+          data._githubFile = f.path;
+          data._githubSha = f.sha;
+          if (!data.status) data.status = 'pending';
+          out.push(data);
+        } catch (e) {}
+      }
+      return out;
+    } catch (e) { return []; }
+  }
+
+  async function deleteGitHubSubmission(filePath, sha) {
+    if (!filePath || !sha) return false;
+    const cfg = await fetchSubmissionConfig();
+    if (!cfg) return false;
+    const token = submissionToken(cfg);
+    if (!token) return false;
+    try {
+      const res = await fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + filePath, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'token ' + token,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: 'remove reviewed submission', sha, branch: cfg.branch || 'main' })
+      });
+      return res.ok;
+    } catch (e) { return false; }
+  }
+
   // ============ 专有名词索引词典（术语表数据源） ============
   // 提取自《盖亚世界史·大升级版》。link 形如 "分类:条目id"，命中现有档案时点名词可跳转。
   const GLOSSARY_CATS = ['神祇', '组织', '地点', '事件', '仪式', '概念实体', '纪元文明'];
@@ -1249,8 +1495,14 @@
         if (!Auth.canSubmit()) return { ok:false, msg:'需 LV.2 以上权限' };
         if (!payload.title || !payload.body) return { ok:false, msg:'标题和正文必填' };
         const saved = Submissions.add(payload);
-        const ghResult = await pushSubmissionToGitHub(saved);
-        return { ok:true, fallback:true, submission: saved, github: ghResult };
+        const pushed = await pushSubmission(saved);
+        if (pushed.ok) {
+          Submissions.update(saved.id, { channel: 'github-direct', githubPath: pushed.path });
+          return { ok:true, fallback:true, submission: saved, pushed: true };
+        }
+        const issue = buildSubmissionIssue(saved);
+        Submissions.update(saved.id, { channel: 'github-issue', issueUrl: issue.url });
+        return { ok:true, fallback:true, submission: saved, issue, pushError: pushed.reason };
       }
       return r;
     },
@@ -3212,6 +3464,7 @@
       else if (parts[0] === 'search') renderSearch(query.get('q') || '');
       else if (parts[0] === 'glossary') renderGlossary();
       else if (parts[0] === 'canon') renderCanon();
+      else if (parts[0] === 'history') renderHistory();
       else if (parts[0] === 'library' && parts.length >= 2) renderLibraryDoc(parts[1]);
       else if (parts[0] === 'library') renderLibrary();
       else if (parts[0] === 'health') renderHealth();
@@ -4215,7 +4468,12 @@
     let listHtml;
     if (catId === 'deities') listHtml = htmlDeityGrid(pageEntries2, q);
     else if (catId === 'timelines') listHtml = renderWorldHistory();
-    else if (catId === 'eras') listHtml = htmlEraGrouped(pageEntries2, q);
+    else if (catId === 'eras') {
+      // 纪元卷宗同样支持三视图：分组卡片（默认） / 列表 / 文件清单
+      if (viewMode === 'list') listHtml = htmlEraList(pageEntries2, q);
+      else if (viewMode === 'files') listHtml = htmlEraFiles(pageEntries2);
+      else listHtml = htmlEraGrouped(pageEntries2, q);
+    }
     else if (viewMode === 'files') listHtml = htmlFileManifest(pageEntries2, catId);
     else if (viewMode === 'list') listHtml = htmlEntryList(pageEntries2, catId, q);
     else listHtml = htmlEntryGrid(pageEntries2, catId, q);
@@ -4297,9 +4555,9 @@
         </select>` : ''}
         <label>排序</label><select id="list-sort">${sortOptions}</select>
         <button id="adv-toggle" type="button" class="btn btn-mini adv-toggle" style="border:1px solid var(--border);padding:5px 10px;font-family:var(--f-mono);font-size:10px;background:var(--bg);color:var(--text);cursor:pointer;">高级筛选 ${advOpen?'▲':'▼'}</button>
-        ${['anomalies','organizations'].includes(catId) ? `
+        ${['anomalies','organizations','eras'].includes(catId) ? `
         <div class="view-toggle" id="view-toggle" title="切换视图">
-          <button type="button" data-view="grid" class="${viewMode==='grid'?'active':''}" title="卡片视图">
+          <button type="button" data-view="grid" class="${viewMode==='grid'?'active':''}" title="${catId==='eras'?'纪元分组视图':'卡片视图'}">
             <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
           </button>
           <button type="button" data-view="list" class="${viewMode==='list'?'active':''}" title="列表视图">
@@ -4893,32 +5151,7 @@
   }
 
   // ============ 世界史 · 四洲完整年表（世界史制纪元编号） ============
-  const WORLD_HISTORY = [
-    { id:'zhong', name:'中洲', en:'ZHONG ZHOU', motto:'世界主线 · 神在人间到静态纪元', tone:'主', gate:'第一门 · 辉山山脉地底', eras:[
-      { name:'第一纪元 · 神在人间', period:'前3000 — 公元300', events:['天坠之始','众灵年代','英雄纪元','诸城邦时代','六道之战','埃尔德时代','旧神黄昏'] },
-      { name:'第二纪元 · 无神者的纪元', period:'公元300 — 1900', events:['灰疫','伪神','黑烛','天教','神弃战争','启明时代'] },
-      { name:'第三纪元 · 触碰边界', period:'公元1900 — 2300', events:['遗迹复原','真相辩论','异常工业','巴别塔','第一次大异常灾变','无主时期'] },
-      { name:'第四纪元 · 静态纪元', period:'公元2300 — 今', events:['红月政府成立（红月纪元零年·2312）','静态平衡','锈蚀病大流行（2360—2370）','红月百年（2412）'] },
-    ]},
-    { id:'bei', name:'北洲', en:'NORTH CONTINENT', motto:'等待之地 · 极光与守夜', tone:'北', gate:'第二门 · 永夜森林之下', eras:[
-      { name:'第一纪元 · 极光与守夜', period:'前3000 — 公元300', events:['白曐坠落·极光初现','守夜营','赛伊东沉睡','第一次守夜战争'] },
-      { name:'第二纪元 · 永夜与凝滞', period:'公元300 — 1900', events:['埃尔德沉没·极光消失','永夜','各国等待','篝火与母石'] },
-      { name:'第三纪元 · 解析与等待', period:'公元1900 — 2300', events:['启明时代','解析与整合','异常工业','光战争','永夜变浅'] },
-      { name:'第四纪元 · 红月之下', period:'公元2300 — 今', events:['纳入红月管控','紧绷的和平','等待藏得更深'] },
-    ]},
-    { id:'dong', name:'东洲', en:'EAST CONTINENT', motto:'倾听之海 · 海沟与声音', tone:'东', gate:'第三门 · 东屿海沟最深处', eras:[
-      { name:'第一纪元 · 海沟与声音', period:'前3000 — 公元300', events:['白曐坠落·海沟变','阿库拉之声','无名城','鲸鱼选皇帝'] },
-      { name:'第二纪元 · 诸国与虚空', period:'公元300 — 1900', events:['埃尔德沉没·海沟虚空扩张','伪神','黑烛传入','火城冷火贸易','黑潮海盗'] },
-      { name:'第三纪元 · 解析与倾听', period:'公元1900 — 2300', events:['启明时代','解析与整合','继续倾听'] },
-      { name:'第四纪元 · 红月之下', period:'公元2300 — 今', events:['纳入红月管控','紧绷的和平','听藏得更深'] },
-    ]},
-    { id:'nan', name:'南洲', en:'SOUTH CONTINENT', motto:'沉睡裂谷 · 白雾与梦潮', tone:'南', gate:'第四门 · 南裂谷深层', eras:[
-      { name:'第一纪元 · 裂谷与母巢', period:'前3000 — 公元300', events:['白曐坠落·裂谷变','白雾扩张','母巢','第一次裂谷远征（前620）'] },
-      { name:'第二纪元 · 裂谷与梦境', period:'公元300 — 1900', events:['母巢之死','苏拉马尔帝国','灰疫·梦潮·睡城病','黑烛·暗烛时代','第一次梦境战争（1000）'] },
-      { name:'第三纪元 · 解析与沉睡', period:'公元1900 — 2300', events:['启明时代','三次探测（2000/2180/2240）','裂谷战争'] },
-      { name:'第四纪元 · 红月之下', period:'公元2300 — 今', events:['纳入红月管控','紧绷的和平','醒者会守裂谷'] },
-    ]},
-  ];
+  const WORLD_HISTORY = (window.GAIA_TIMELINES && window.GAIA_TIMELINES.continents) || [];
 
   function renderWorldHistory() {
     const CODE = { zhong:'ZHN', bei:'NOR', dong:'EST', nan:'SOU' };
@@ -4929,7 +5162,9 @@
             <span class="wh-era-name">${escapeHtml(e.name)}</span>
             <span class="wh-era-period">${escapeHtml(e.period)}</span>
           </div>
-          <div class="wh-era-events">${e.events.map(x => `<span class="wh-tag">${escapeHtml(x)}</span>`).join('')}</div>
+          <div class="wh-era-events">${e.events.map(x => e.target
+            ? `<a class="wh-tag is-link" href="#/history?vol=${e.target.split('-')[0]}&sec=${e.target}">${escapeHtml(x)}</a>`
+            : `<span class="wh-tag">${escapeHtml(x)}</span>`).join('')}</div>
         </div>`).join('');
       return `
       <section class="wh-card ${c.id}">
@@ -4948,8 +5183,219 @@
         <div class="wh-eras">${erasHtml}</div>
       </section>`;
     }).join('');
-    return `<div class="wh-grid">${cards}</div>
+    return `<div class="wh-entry"><a class="btn btn-ghost" href="#/history">全卷通读 · ${window.GAIA_HISTORY ? window.GAIA_HISTORY.vols.length : 14} 卷 →</a></div>
+      <div class="wh-grid">${cards}</div>
       <div class="wh-note">四洲史与世界史制共用纪元编号（第四纪元·红月之下为四洲交汇）；第一至第四门已探明，第五至第七门尚未定位。</div>`;
+  }
+
+  // ============ 世界史 · 全卷通读（数据来自 data/history/，按卷懒加载） ============
+  let _hsIndexLoading = false;
+  let _hsIndexTries = 0;
+  function ensureHistoryIndex(cb) {
+    if (window.GAIA_HISTORY) { cb(); return; }
+    if (_hsIndexLoading) { setTimeout(() => ensureHistoryIndex(cb), 100); return; }
+    if (_hsIndexTries >= 2) { cb(); return; }
+    _hsIndexTries++;
+    _hsIndexLoading = true;
+    const s = document.createElement('script');
+    s.src = 'data/history/index.js?v=2';
+    s.onload = () => { _hsIndexLoading = false; cb(); };
+    s.onerror = () => { _hsIndexLoading = false; cb(); };
+    document.head.appendChild(s);
+  }
+
+  function loadHistoryVol(id, cb) {
+    const cache = window.GAIA_HISTORY_VOL || {};
+    if (cache[id]) { cb(cache[id]); return; }
+    const s = document.createElement('script');
+    s.src = 'data/history/v-' + id + '.js?v=3';
+    s.onload = () => cb((window.GAIA_HISTORY_VOL || {})[id] || null);
+    s.onerror = () => cb(null);
+    document.head.appendChild(s);
+  }
+
+  function renderHistory() {
+    if (!view) return;
+    if (!window.GAIA_HISTORY) {
+      if (_hsIndexTries >= 2) {
+        view.innerHTML = '<div class="empty-note">世界史数据集加载失败：data/history/index.js。</div>';
+        return;
+      }
+      view.innerHTML = '<div class="hs-loading">正在装载世界史总目…</div>';
+      ensureHistoryIndex(() => renderHistory());
+      return;
+    }
+    const M = window.GAIA_HISTORY;
+    if (!M || !M.vols || !M.vols.length) {
+      view.innerHTML = '<div class="empty-note">世界史数据集缺失：data/history/index.js 未加载。</div>';
+      return;
+    }
+    const groups = M.groups || [];
+    const treeHtml = groups.map(g => {
+      const vols = M.vols.filter(v => v.group === g.id);
+      if (!vols.length) return '';
+      return `<div class="hs-group">
+        <div class="hs-group-label">${escapeHtml(g.label)}</div>
+        ${vols.map(v => `<a class="hs-vol" data-vol="${v.id}" href="#/history?vol=${v.id}">
+          <span class="hs-vol-name">${escapeHtml(v.title)}</span>
+          <span class="hs-vol-meta">${v.secs} 节 · ${(v.chars / 10000).toFixed(1)} 万字</span>
+        </a>`).join('')}
+      </div>`;
+    }).join('');
+
+    view.innerHTML = `
+      <section class="hs-view">
+        <div class="hs-head">
+          <div>
+            <div class="hs-title">盖亚 · 世界史</div>
+            <div class="hs-sub">GLOBAL HISTORY · ${M.vols.length} 卷 / ${(M.totalChars / 10000).toFixed(1)} 万字</div>
+          </div>
+          <div class="hs-tools">
+            <input class="hs-search" id="hs-q" type="search" placeholder="检索正文…" autocomplete="off">
+            <a class="hs-switch" href="#/timelines">四洲骨架视图 →</a>
+          </div>
+        </div>
+        <div class="hs-body">
+          <aside class="hs-tree">
+            <div class="hs-results" id="hs-results" hidden></div>
+            <div id="hs-tree">${treeHtml}</div>
+          </aside>
+          <div class="hs-doc" id="hs-doc"><div class="hs-empty">从左侧选择一卷开始阅读。</div></div>
+        </div>
+      </section>`;
+
+    const doc = document.getElementById('hs-doc');
+    const searchEl = document.getElementById('hs-q');
+    const resultsEl = document.getElementById('hs-results');
+    const treeEl = document.getElementById('hs-tree');
+    const volLinks = view.querySelectorAll('.hs-vol');
+    const LAST_KEY = 'gaia.hs.last';
+
+    function remember(volId, secId) {
+      try { localStorage.setItem(LAST_KEY, JSON.stringify({ v: volId, s: secId || '' })); } catch (e) { /* 隐私模式下静默跳过 */ }
+    }
+
+    function jumpTo(secId, instant) {
+      if (!secId) return;
+      const t = doc.querySelector('#' + secId);
+      if (t) t.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    function showVol(id, secId) {
+      const meta = M.vols.find(v => v.id === id) || M.vols[0];
+      if (!meta) return;
+      volLinks.forEach(a => a.classList.toggle('is-on', a.dataset.vol === meta.id));
+      doc.innerHTML = '<div class="hs-loading">正在调阅「' + escapeHtml(meta.title) + '」…</div>';
+      loadHistoryVol(meta.id, (v) => {
+        if (!v) { doc.innerHTML = '<div class="hs-empty">该卷调阅失败。</div>'; return; }
+        const idx = M.vols.findIndex(x => x.id === meta.id);
+        const prev = idx > 0 ? M.vols[idx - 1] : null;
+        const next = idx < M.vols.length - 1 ? M.vols[idx + 1] : null;
+        const chips = meta.sections.map(s => `<a class="hs-chip" data-sec="${s.id}" href="javascript:void(0)">${escapeHtml(s.title)}</a>`).join('');
+        doc.innerHTML = `
+          <div class="hs-doc-head">
+            <div class="hs-doc-code">${escapeHtml(meta.id.toUpperCase())} · VOL ${meta.order} · ${escapeHtml(meta.group.toUpperCase())}</div>
+            <div class="hs-doc-title">${escapeHtml(meta.title)}</div>
+            <div class="hs-doc-meta">${meta.secs} 节 · ${meta.chars} 字</div>
+          </div>
+          <div class="hs-chips">${chips}</div>
+          <article class="hs-content">${v.html}</article>
+          <div class="hs-pager">
+            ${prev ? `<a class="hs-pager-btn" data-vol="${prev.id}" href="#/history?vol=${prev.id}">← ${escapeHtml(prev.title)}</a>` : '<span></span>'}
+            ${next ? `<a class="hs-pager-btn" data-vol="${next.id}" href="#/history?vol=${next.id}">${escapeHtml(next.title)} →</a>` : '<span></span>'}
+          </div>`;
+        // 通史侧反链：本卷若有对应卷宗，在小节标题下挂一枚「◈ 卷宗」chip
+        Object.entries(ERA_HISTORY_LINKS).filter(([, v]) => v.vol === meta.id).forEach(([eid, v]) => {
+          const h = doc.querySelector('#' + v.sec);
+          if (!h) return;
+          const link = document.createElement('a');
+          link.className = 'hs-codex-chip';
+          link.href = '#/entry/eras/' + eid;
+          link.textContent = '◈ 卷宗 ' + v.code;
+          link.style.cssText = 'display:inline-block;margin:0 0 14px;padding:3px 8px;border:1px solid var(--border);font-family:var(--f-mono);font-size:10px;letter-spacing:1px;color:var(--text-2);text-decoration:none;background:var(--bg-2);';
+          h.insertAdjacentElement('afterend', link);
+        });
+
+        doc.querySelectorAll('.hs-chip').forEach(a => {
+          a.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            remember(meta.id, a.dataset.sec);
+            jumpTo(a.dataset.sec);
+          });
+        });
+        doc.querySelectorAll('.hs-pager-btn').forEach(a => {
+          a.addEventListener('click', (ev) => { ev.preventDefault(); showVol(a.dataset.vol); });
+        });
+        remember(meta.id, secId || '');
+        // 延后一帧再定位：路由末尾会统一把页面滚回顶部，同步跳转会被它覆盖
+        if (secId) setTimeout(() => jumpTo(secId, true), 0);
+      });
+    }
+
+    volLinks.forEach(a => {
+      a.addEventListener('click', (ev) => { ev.preventDefault(); showVol(a.dataset.vol); });
+    });
+
+    // ---- 检索：search.js 按需加载，首屏不背 34KB ----
+    let searchItems = null;
+    let debTimer = null;
+
+    function ensureSearch(cb) {
+      if (searchItems) { cb(searchItems); return; }
+      const S = window.GAIA_HISTORY_SEARCH;
+      if (S && S.items) { searchItems = S.items; cb(searchItems); return; }
+      const s = document.createElement('script');
+      s.src = 'data/history/search.js?v=3';
+      s.onload = () => { searchItems = (window.GAIA_HISTORY_SEARCH || {}).items || []; cb(searchItems); };
+      s.onerror = () => { searchItems = []; cb([]); };
+      document.head.appendChild(s);
+    }
+
+    function renderResults(list, kw) {
+      if (!kw) {
+        resultsEl.hidden = true;
+        resultsEl.innerHTML = '';
+        treeEl.hidden = false;
+        return;
+      }
+      treeEl.hidden = true;
+      resultsEl.hidden = false;
+      if (!list.length) { resultsEl.innerHTML = '<div class="hs-empty">无匹配条目。</div>'; return; }
+      const shown = list.slice(0, 12);
+      resultsEl.innerHTML = shown.map(it => `
+        <a class="hs-hit" data-vol="${it.v}" data-sec="${it.s}" href="#/history?vol=${it.v}&sec=${it.s}">
+          <span class="hs-hit-title">${escapeHtml(it.t)}</span>
+          <span class="hs-hit-vol">${escapeHtml(it.c)} · ${escapeHtml(it.p || it.s)}</span>
+          <span class="hs-hit-desc">${escapeHtml(it.d)}</span>
+        </a>`).join('') + (list.length > 12 ? `<div class="hs-hit-more">另有 ${list.length - 12} 条，缩小关键词范围。</div>` : '');
+      resultsEl.querySelectorAll('.hs-hit').forEach(a => {
+        a.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          searchEl.value = '';
+          renderResults([], '');
+          showVol(a.dataset.vol, a.dataset.sec);
+        });
+      });
+    }
+
+    searchEl.addEventListener('input', () => {
+      const kw = searchEl.value.trim();
+      clearTimeout(debTimer);
+      if (!kw) { renderResults([], ''); return; }
+      debTimer = setTimeout(() => {
+        ensureSearch((items) => {
+          const k = kw.toLowerCase();
+          const hit = items.filter(it => (it.t + it.d + it.c).toLowerCase().indexOf(k) >= 0);
+          renderResults(hit, kw);
+        });
+      }, 160);
+    });
+
+    const q = new URLSearchParams(location.hash.split('?')[1] || '');
+    let last = {};
+    try { last = JSON.parse(localStorage.getItem(LAST_KEY) || '{}') || {}; } catch (e) { last = {}; }
+    showVol(q.get('vol') || last.v || 'main', q.get('sec') || '');
+    document.title = '盖亚世界史 · 世界观察档案库';
   }
 
   // 时间线列表 — 统一使用 anom-card 风格
@@ -5049,6 +5495,156 @@
     return out;
   }
 
+  // 纪元卷宗 · 列表视图 / 文件清单视图：保留「纪元」大分组，并在组内按四洲再分一层
+  const ERA_AREAS = ['中洲', '北洲', '东洲', '南洲'];
+
+  // 卷宗 ↔ 四洲通史互链：卷宗里的核心事件名指向通史对应小节（h4 锚点）
+  // keys 只放正文散文里真的出现过的词（引文块与标题不会加链）
+  const ERA_HISTORY_LINKS = {
+    'ev-0941': { vol: 'zhong', sec: 'zhong-h03', code: 'EV-0941', label: '中洲通史 · 三、诸城邦与问籍令（前1100—前653）', keys: ['问所', '九原'] },
+    'ev-0384': { vol: 'zhong', sec: 'zhong-h05', code: 'EV-0384', label: '中洲通史 · 五、白袍远征（前384—前379）', keys: ['辉山', '洛迦'] },
+    'ev-0957': { vol: 'nan',   sec: 'nan-h10',   code: 'EV-0957', label: '南洲通史 · 六、梦晶与睡城三约（812—1000）', keys: ['图兰', '梦晶'] },
+    'ev-0980': { vol: 'dong',  sec: 'dong-h09',  code: 'EV-0980', label: '东洲通史 · 三、聋人（980—1011）', keys: ['船眼', '白烛耳'] },
+    'ev-1180': { vol: 'bei',   sec: 'bei-h09',   code: 'EV-1180', label: '北洲通史 · 四、伪神年代（1100—1500）', keys: ['无替石', '替身之乱'] },
+    'ev-1307': { vol: 'nan',   sec: 'nan-h11',   code: 'EV-1307', label: '南洲通史 · 七、第一次梦境战争与还梦行军（1000—1311）', keys: ['梦晶', '白雾'] },
+  };
+
+  // 在正文里给关键术语加内链：每个术语最多一处，总数不超过 2 处；不动引文块、标题、既有链接
+  function linkTermsInNode(root, keys, href) {
+    if (!root || !keys || !keys.length) return;
+    let placed = 0;
+    for (const key of keys) {
+      if (placed >= 2) break;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+      let node = null;
+      while (walker.nextNode()) {
+        const n = walker.currentNode;
+        if (n.nodeValue.indexOf(key) < 0) continue;
+        const p = n.parentElement;
+        if (!p || p.closest('a, blockquote, h1, h2, h3, h4, h5, h6, code')) continue;
+        node = n;
+        break;
+      }
+      if (!node) continue;
+      const at = node.nodeValue.indexOf(key);
+      const link = document.createElement('a');
+      link.href = href;
+      link.className = 'era-inline-link';
+      link.textContent = key;
+      link.style.cssText = 'color:inherit;text-decoration:none;border-bottom:1px dotted var(--border);';
+      const frag = document.createDocumentFragment();
+      if (at > 0) frag.appendChild(document.createTextNode(node.nodeValue.slice(0, at)));
+      frag.appendChild(link);
+      if (at + key.length < node.nodeValue.length) frag.appendChild(document.createTextNode(node.nodeValue.slice(at + key.length)));
+      node.parentElement.replaceChild(frag, node);
+      placed++;
+    }
+  }
+  function eraAreaOf(e) {
+    const hit = (e.tags || []).find(t => ERA_AREAS.includes(t));
+    return hit || '未分类';
+  }
+  function eraGroupsOf(entries) {
+    const byEra = {};
+    entries.forEach(e => {
+      const k = e.era || '未分类卷宗';
+      (byEra[k] = byEra[k] || []).push(e);
+    });
+    return Object.entries(byEra).map(([era, list]) => {
+      const byArea = {};
+      list.forEach(e => { const a = eraAreaOf(e); (byArea[a] = byArea[a] || []).push(e); });
+      const areaOrder = ERA_AREAS.filter(a => byArea[a])
+        .concat(Object.keys(byArea).filter(a => !ERA_AREAS.includes(a)));
+      return { era, list, areaOrder, byArea };
+    });
+  }
+  function htmlEraList(entries, kw) {
+    if (!entries.length) return '';
+    return eraGroupsOf(entries).map(g => {
+      const rows = g.areaOrder.map(area => {
+        const items = g.byArea[area].map(e => {
+          const wordCount = (e.body || '').replace(/<[^>]+>/g, '').trim().length;
+          const codeTxt = (e.code && e.code !== e.title) ? highlightKeyword(e.code, kw) : '';
+          const tagHtml = (e.tags || []).filter(t => !ERA_AREAS.includes(t)).slice(0, 2)
+            .map(t => `<span class="entry-list-tag">${highlightKeyword(t, kw)}</span>`).join('');
+          return `
+        <a class="entry-list-item" href="#/entry/eras/${encodeURIComponent(e.id)}">
+          <span class="entry-list-num">${escapeHtml(String(e.id))}</span>
+          <span class="entry-list-dash">—</span>
+          <span class="entry-list-title">${highlightKeyword(e.title, kw)}</span>
+          ${codeTxt ? `<span class="entry-list-code">代号: ${codeTxt}</span>` : ''}
+          ${tagHtml}
+          <span class="entry-list-meta">${wordCount > 999 ? (wordCount/1000).toFixed(1)+'k' : wordCount}字</span>
+        </a>`;
+        }).join('');
+        return `
+        <div class="era-sub-row" style="padding:7px 12px 5px 14px;border-top:1px dashed var(--border);font-family:var(--f-mono);font-size:10px;letter-spacing:1.5px;color:var(--text-2);background:var(--bg-2);">▸ ${escapeHtml(area)} · ${g.byArea[area].length} 条</div>
+        ${items}`;
+      }).join('');
+      return `
+      <div class="era-group">
+        <div class="era-group-title">
+          <span>${ico('sun',12)} ${highlightKeyword(g.era, kw)}</span>
+          <span class="era-group-count">${g.list.length} VOLS</span>
+        </div>
+        <div class="entry-list">${rows}</div>
+      </div>`;
+    }).join('');
+  }
+  function htmlEraFiles(entries) {
+    if (!entries.length) {
+      return `<div class="empty-state"><div class="es-icon">▱</div><div class="es-title">此分类暂无文件</div><div class="es-desc">待底本导入后可在此查看文件清单</div></div>`;
+    }
+    const totalChars = entries.reduce((s, e) => s + String(e.body || '').replace(/<[^>]+>/g, '').length, 0);
+    const bandEra = 'padding:9px 12px;border-top:1px solid var(--border);background:var(--bg-2);font-family:var(--f-mono);font-size:11px;letter-spacing:1.5px;color:var(--text);';
+    const bandArea = 'padding:6px 12px 6px 26px;border-top:1px dashed var(--border);font-family:var(--f-mono);font-size:10px;letter-spacing:1.2px;color:var(--text-2);';
+    const rows = eraGroupsOf(entries).map(g => {
+      const head = `<tr class="fm-era-band"><td colspan="6" style="${bandEra}">${ico('sun',12)} ${escapeHtml(g.era)} · ${g.list.length} 份</td></tr>`;
+      const body = g.areaOrder.map(area => {
+        const areaHead = `<tr class="fm-area-band"><td colspan="6" style="${bandArea}">▸ ${escapeHtml(area)} · ${g.byArea[area].length} 份</td></tr>`;
+        const listRows = g.byArea[area].map(e => {
+          const plain = String(e.body || '').replace(/<[^>]+>/g, '').trim();
+          const chars = plain.length;
+          const src = e.source || '';
+          const srcShort = src.length > 46 ? '…' + src.slice(-44) : src;
+          return `
+        <tr class="fm-row">
+          <td class="fm-c-id"><a href="#/entry/eras/${encodeURIComponent(e.id)}">${escapeHtml(String(e.id))}</a></td>
+          <td class="fm-c-title"><a href="#/entry/eras/${encodeURIComponent(e.id)}">${escapeHtml(String(e.title || '—'))}</a></td>
+          <td class="fm-c-src">${src ? `<span class="fm-src" title="${escapeAttr(src)}">${escapeHtml(srcShort)}</span>` : '<span class="fm-src fm-src-none">未标注</span>'}</td>
+          <td class="fm-c-num">${chars ? (chars > 999 ? (chars / 1000).toFixed(1) + 'k' : chars) : '—'}</td>
+          <td class="fm-c-num">${escapeHtml(String(e.updated || e.addedAt || '—'))}</td>
+          <td class="fm-c-act">
+            <button type="button" class="fm-dl" data-fm-dl="${escapeAttr(String(e.id))}" data-fmt="md" title="下载 Markdown 文件">${ico('download',11)} MD</button>
+            <button type="button" class="fm-dl" data-fm-dl="${escapeAttr(String(e.id))}" data-fmt="json" title="下载 JSON 记录">${ico('download',11)} JSON</button>
+          </td>
+        </tr>`;
+        }).join('');
+        return `${areaHead}${listRows}`;
+      }).join('');
+      return `${head}${body}`;
+    }).join('');
+    return `
+      <div class="fm-wrap">
+        <div class="fm-summary">
+          <span>${ico('folder',12)} 文件清单 · FILE MANIFEST</span>
+          <span class="fm-summary-sep">·</span>
+          <span>共 <strong>${entries.length}</strong> 份</span>
+          <span class="fm-summary-sep">·</span>
+          <span>合计 <strong>${totalChars > 999 ? (totalChars / 1000).toFixed(1) + 'k' : totalChars}</strong> 字</span>
+        </div>
+        <div class="fm-scroll">
+          <table class="fm-table">
+            <thead><tr>
+              <th>编号</th><th>标题</th><th>来源文件</th>
+              <th class="fm-ta-r">字数</th><th class="fm-ta-r">更新时间</th><th class="fm-ta-r">导出</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
   // ============ 详情页辅助：TOC 生成 ============
   function injectTocAnchors(html) {
     // 把 h2/h3 加 id，返回 {html, toc:[{level,id,text}]}
@@ -5081,6 +5677,15 @@
     const isFav = Favorites.has(catId, id);
     const isRead = MarkedRead.has(catId, id);
     const canFav = true;   // 收藏 / 已读为本地功能，游客（LV.1）同样可用
+
+    // 纪元卷宗 → 四洲通史：互链（正文首现术语内链 + 底部跳转条）
+    const eraLink = catId === 'eras' ? (ERA_HISTORY_LINKS[e.id] || null) : null;
+    const eraLinkHref = eraLink ? `#/history?vol=${eraLink.vol}&sec=${eraLink.sec}` : '';
+    const eraPanelHtml = eraLink ? `
+      <div class="era-history-link" style="margin:22px 0 0;padding:12px 14px;border:1px solid var(--border);background:var(--bg-2);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-family:var(--f-mono);font-size:11px;letter-spacing:1px;">
+        <span style="color:var(--text-2);">◆ 关联通史</span>
+        <a href="${eraLinkHref}" style="color:var(--text);text-decoration:none;border-bottom:1px dotted var(--border);padding-bottom:1px;">${escapeHtml(eraLink.label)} →</a>
+      </div>` : '';
 
     // 顶部机密印章（高危显示 TOP SECRET，其他显示 CONFIDENTIAL 等）
     let stampText = 'CONFIDENTIAL';
@@ -5413,6 +6018,8 @@
             ` : ''}
           </div>
 
+          ${eraPanelHtml}
+
           <div class="detail-source">
             <div>来源路径<strong>${escapeHtml(e.source||'—')}</strong></div>
             <div>归档于<strong>${DATA.meta.updated || '—'}</strong> / 世界观察档案库</div>
@@ -5450,6 +6057,8 @@
     // 详情页字号控制 + 阅读进度 + TOC 高亮
     const readerBar = view.querySelector('.detail-reader-bar');
     const detailBody = document.getElementById('detail-body');
+    // 卷宗正文首现的关键术语 → 通史对应小节
+    if (detailBody && eraLink) linkTermsInNode(detailBody, eraLink.keys, eraLinkHref);
     if (readerBar && detailBody) {
       const savedFs = localStorage.getItem('detail-font-size');
       if (savedFs) {
@@ -6841,6 +7450,7 @@
             <span class="submit-item-cat">${CAT_MAP[s.category]?.name || s.category}</span>
             ${statusBadgeHtml(s.status)}
             <span class="submit-item-date">${new Date(s.at).toLocaleString('zh-CN')}</span>
+            ${s.issueUrl && s.status === 'pending' ? `<a class="submit-item-issue" href="${escapeAttr(s.issueUrl)}" target="_blank" rel="noopener">在 Issue 页确认提交 →</a>` : ''}
             ${done ? `<button type="button" class="submit-item-del" title="删除此记录" data-del-id="${escapeAttr(s.id)}">🗑 删除记录</button>` : ''}
           </div>
           <div class="submit-item-title">${escapeHtml(s.title)}</div>
@@ -6883,7 +7493,7 @@
         <div class="submit-head">
           <div class="submit-title-block">
             <h2 class="submit-h2">投稿设定 · SUBMIT ENTRY</h2>
-            <p class="submit-sub">当前身份 <strong>${Auth.identity()}</strong> · LV.2 投稿权限已激活 · 稿件进入 <span class="sb-pending-badge">待审核</span> 队列</p>
+            <p class="submit-sub">当前身份 <strong>${Auth.identity()}</strong> · 提交后自动写入 <span class="sb-pending-badge">待审核</span> 队列，由管理员审核发布</p>
           </div>
         </div>
 
@@ -7018,15 +7628,6 @@
               <span class="sb-label">来源文件 · SOURCE</span>
               <input type="text" id="sb-source" placeholder="例：红月之下/核心档案/XXX.docx（选填）">
             </label>
-            <div class="sb-field" style="grid-column:1/-1;">
-              <details style="border:1px solid var(--border);border-radius:4px;padding:0;overflow:hidden;">
-                <summary style="padding:8px 12px;cursor:pointer;font-family:var(--f-mono);font-size:11px;color:var(--text-2);background:var(--bg-2);">投稿同步令牌 · GITHUB SYNC TOKEN（选填，用于推送投稿至 GitHub 供管理员跨设备审核）</summary>
-                <div style="padding:12px;">
-                  <input type="password" id="sb-gh-token" placeholder="ghp_xxxxxxxxxxxx（留空则仅本地保存）" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);background:var(--bg);color:var(--text-1);font-family:var(--f-mono);font-size:12px;">
-                  <p style="margin:6px 0 0;font-family:var(--f-mono);font-size:10px;color:var(--text-2);line-height:1.5;">令牌保存在本地浏览器，不会上传。填写后投稿将自动推送到 GitHub，管理员可在其他设备查看。令牌可向管理员索取。</p>
-                </div>
-              </details>
-            </div>
             <div class="sb-field sb-field-audio">
               <span class="sb-label">音频附件 · AUDIO <span class="sb-label-hint">档案配音 / 录音 · 选填</span></span>
               <div class="sb-audio-uploader">
@@ -7053,13 +7654,6 @@
         </div>
       </div>
     `;
-
-    // 恢复已保存的 GitHub 投稿令牌
-    const savedGhToken = localStorage.getItem('wa_submission_token');
-    if (savedGhToken) {
-      const ghTokenEl = document.getElementById('sb-gh-token');
-      if (ghTokenEl) ghTokenEl.value = savedGhToken;
-    }
 
     // ============ 草稿箱：恢复提示 + 自动保存 ============
     const draft = SubmitDraft.get();
@@ -7731,9 +8325,6 @@
         if (!bodyText) return sbErr('请输入正文');
 
         const customId = document.getElementById('sb-id').value.trim();
-        const ghTokenInput = document.getElementById('sb-gh-token');
-        const ghToken = ghTokenInput ? ghTokenInput.value.trim() : '';
-        if (ghToken) localStorage.setItem('wa_submission_token', ghToken);
         const data = {
           title,
           category: document.getElementById('sb-category').value,
@@ -7762,14 +8353,47 @@
         SFX.save();
         const ok = document.getElementById('sb-success');
         const savedId = (r.submission && r.submission.id) || '新档案';
-        const where = r.fallback ? '本地审核队列' : '服务器审核队列';
-        const ghStatus = r.github ? (r.github.ok ? ' · 已同步至 GitHub' : ' · GitHub 同步失败（仅本地保存）') : '';
+        const issue = r.issue || null;
+        const delivered = !!r.pushed;
         ok.classList.remove('sb-info');
         ok.innerHTML = `
-          <span>${ico('check',14)} 投稿已收妥 · 编号 <strong>${savedId}</strong> · 已进入${where}${ghStatus}，等待管理员审核后再发布</span>
-          <button type="button" class="sb-close-btn" title="关闭通知">${ico('cross',12)}</button>
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <span>${ico('check',14)}</span>
+            <div style="flex:1;min-width:0;">
+              <div>${delivered ? '投稿已送达' : '投稿已登记'} · 编号 <strong>${savedId}</strong></div>
+              <div style="margin-top:4px;color:var(--text-2);font-size:11px;line-height:1.6;">
+                ${delivered
+                  ? '稿件已直接写入管理员仓库的待审队列，无需任何额外操作，等待管理员审核发布即可。'
+                  : '自动送达失败，还差最后一步：点下方按钮跳到 GitHub，在页面里直接点 <strong>Create</strong> 提交；没有 GitHub 账号可复制内容发给管理员。'}
+              </div>
+              ${delivered ? '' : `${issue ? `<div class="sb-issue-actions">
+                <a class="sb-issue-btn" href="${issue.url}" target="_blank" rel="noopener">${ico('share',13)} 在 GitHub 确认提交</a>
+                <button type="button" class="sb-issue-copy" data-issue-copy>复制投稿内容</button>
+              </div>
+              <div class="sb-issue-hint">${issue.truncated ? '正文较长，已在 Issue 里截断；完整正文可贴在 Issue 评论里。' : '打开后无需修改任何内容，直接提交即可。'}</div>` : ''}`}
+            </div>
+            <button type="button" class="sb-close-btn" title="关闭通知">${ico('cross',12)}</button>
+          </div>
         `;
         ok.style.display = 'block';
+        if (issue) {
+          const copyBtn = ok.querySelector('[data-issue-copy]');
+          if (copyBtn) copyBtn.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(issue.markdown);
+              copyBtn.textContent = '已复制';
+            } catch (e) {
+              const ta = document.createElement('textarea');
+              ta.value = issue.markdown;
+              ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+              document.body.appendChild(ta);
+              ta.select();
+              try { document.execCommand('copy'); copyBtn.textContent = '已复制'; }
+              catch (e2) { copyBtn.textContent = '复制失败'; }
+              ta.remove();
+            }
+          });
+        }
         // 绑定关闭按钮
         const closeBtn = ok.querySelector('.sb-close-btn');
         if (closeBtn) closeBtn.addEventListener('click', () => { ok.style.display = 'none'; });
@@ -8950,112 +9574,6 @@
       return results;
     }
 
-    async function publishSubmissionConfig(cfg) {
-      const { token, owner, repo, branch } = cfg;
-      const filePath = 'data/submissions-config.json';
-      const config = { owner, repo, branch, at: Date.now() };
-      if (token) config.k = btoa(unescape(encodeURIComponent(token)));
-      const content = JSON.stringify(config, null, 2);
-      let sha = null;
-      try {
-        const shaRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`, {
-          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-        });
-        if (shaRes.ok) { const d = await shaRes.json(); sha = d.sha; }
-      } catch (e) {}
-      const b64 = btoa(unescape(encodeURIComponent(content)));
-      const bodyObj = { message: 'publish submission config', content: b64, branch };
-      if (sha) bodyObj.sha = sha;
-      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
-        method: 'PUT',
-        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(bodyObj)
-      });
-      if (res.ok) return { ok: true };
-      let errMsg = `HTTP ${res.status}`;
-      try {
-        const errData = await res.json();
-        if (errData.message) errMsg += ' · ' + errData.message;
-      } catch (e) {}
-      return { ok: false, error: errMsg };
-    }
-
-    async function fetchSubmissionConfig() {
-      try {
-        const res = await fetch('data/submissions-config.json?v=' + Date.now());
-        if (!res.ok) return null;
-        const ct = res.headers.get('content-type') || '';
-        if (!ct.includes('application/json') && !ct.includes('text/plain')) return null;
-        const text = await res.text();
-        if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) return null;
-        return JSON.parse(text);
-      } catch (e) { return null; }
-    }
-
-    async function pushSubmissionToGitHub(submission) {
-      const config = await fetchSubmissionConfig();
-      if (!config || !config.owner || !config.repo) return { ok: false, reason: 'no-config' };
-      const configToken = config.k ? decodeURIComponent(escape(atob(config.k))) : null;
-      const token = localStorage.getItem('wa_submission_token') || getSyncConfig().token || configToken;
-      if (!token) return { ok: false, reason: 'no-token' };
-      const { owner, repo, branch } = config;
-      const filePath = `submissions/${submission.id}.json`;
-      const content = JSON.stringify(submission, null, 2);
-      const b64 = btoa(unescape(encodeURIComponent(content)));
-      const bodyObj = { message: `submission ${submission.id}`, content: b64, branch };
-      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
-        method: 'PUT',
-        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(bodyObj)
-      });
-      return { ok: res.ok };
-    }
-
-    async function fetchGitHubSubmissions() {
-      const config = await fetchSubmissionConfig();
-      if (!config || !config.owner || !config.repo) return [];
-      const { owner, repo, branch } = config;
-      const configToken = config.k ? decodeURIComponent(escape(atob(config.k))) : null;
-      const token = getSyncConfig().token || localStorage.getItem('wa_submission_token') || configToken;
-      const headers = { 'Accept': 'application/vnd.github.v3+json' };
-      if (token) headers['Authorization'] = `token ${token}`;
-      try {
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/submissions?ref=${branch}`, {
-          headers
-        });
-        if (!res.ok) return [];
-        const files = await res.json();
-        if (!Array.isArray(files)) return [];
-        const results = [];
-        for (const f of files) {
-          if (!f.name.endsWith('.json')) continue;
-          try {
-            const fRes = await fetch(f.download_url);
-            const data = await fRes.json();
-            data._githubFile = f.path;
-            data._githubSha = f.sha;
-            results.push(data);
-          } catch (e) {}
-        }
-        return results;
-      } catch (e) { return []; }
-    }
-
-    async function deleteGitHubSubmission(filePath, sha) {
-      const config = await fetchSubmissionConfig();
-      if (!config) return false;
-      const configToken = config.k ? decodeURIComponent(escape(atob(config.k))) : null;
-      const token = getSyncConfig().token || localStorage.getItem('wa_submission_token') || configToken;
-      if (!token) return false;
-      const { owner, repo, branch } = config;
-      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: `remove reviewed submission`, sha, branch })
-      });
-      return res.ok;
-    }
-
     function drawSyncTab() {
       const body = document.getElementById('admin-tab-body');
       const cfg = getSyncConfig();
@@ -9115,10 +9633,9 @@
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               <button class="abtn abtn-approve" id="sync-push-btn">${ico('cloud',14)} 推送数据到 GitHub</button>
               <button class="abtn" id="sync-export-btn">${ico('save',14)} 导出数据文件到本地</button>
-              <button class="abtn" id="sync-pubsub-btn">${ico('cloud',14)} 发布投稿配置</button>
             </div>
             <div style="margin-top:10px;font-family:var(--f-mono);font-size:10px;color:var(--text-2);line-height:1.6;">
-              「发布投稿配置」会将仓库信息和 Token（base64 编码）写入 data/submissions-config.json，使投稿者提交后自动推送至 GitHub。编码存储可绕过 GitHub 密钥扫描。
+              访客投稿经 Cloudflare Worker 代理写入仓库 submissions/ 目录，令牌只保存在 Worker 环境变量里。这里的 GitHub 令牌仅用于推送数据与清理已审文件。
             </div>
             <div id="sync-progress" style="margin-top:14px;font-family:var(--f-mono);font-size:11px;color:var(--text-2);"></div>
             <div id="sync-results" style="margin-top:10px;"></div>
@@ -9142,30 +9659,6 @@
         exportDataFiles();
         SFX.export();
         banner('数据文件已下载，请替换 data/ 目录下的文件', 'ok');
-      });
-      const pubsubBtn = document.getElementById('sync-pubsub-btn');
-      if (pubsubBtn) pubsubBtn.addEventListener('click', async () => {
-        const c = getSyncConfig();
-        if (!c.token || !c.owner || !c.repo) {
-          banner('请先填写并保存 GitHub 配置', 'err');
-          return;
-        }
-        if (!confirm('发布投稿配置会将仓库信息和 Token（编码存储）写入 data/submissions-config.json。\n\nToken 经 base64 编码存储以绕过 GitHub 密钥扫描，使所有用户投稿时自动推送至 GitHub。\n\n确认发布？')) return;
-        pubsubBtn.disabled = true;
-        pubsubBtn.textContent = '发布中...';
-        try {
-          const result = await publishSubmissionConfig(c);
-          if (result.ok) {
-            SFX.login();
-            banner('投稿配置已发布到 GitHub（data/submissions-config.json）', 'ok');
-          } else {
-            banner('投稿配置发布失败：' + (result.error || '请检查 Token 权限'), 'err');
-          }
-        } catch (e) {
-          banner('投稿配置发布失败：' + (e.message || '未知错误'), 'err');
-        }
-        pubsubBtn.disabled = false;
-        pubsubBtn.innerHTML = ico('cloud',14) + ' 发布投稿配置';
       });
       const pushBtn = document.getElementById('sync-push-btn');
       if (pushBtn) pushBtn.addEventListener('click', async () => {
@@ -9360,14 +9853,26 @@
       body.innerHTML = `<div class="admin-loading">加载投稿列表…</div>`;
       const r = await API.adminListSubmissions('pending', '');
       let localSubs = r.ok ? r.list : [];
-      // 拉取GitHub投稿
+      // 拉取 GitHub 投稿：令牌直传的 JSON 稿件 + Issue 兜底稿件
       let ghSubs = [];
-      try { ghSubs = await fetchGitHubSubmissions(); } catch (e) {}
+      try {
+        const dirSubs = await fetchGitHubSubmissions();
+        const issueSubs = await fetchIssueSubmissions();
+        ghSubs = dirSubs.concat(issueSubs);
+      } catch (e) {}
       // 缓存GitHub投稿供状态筛选复用
       let cachedGhSubs = ghSubs;
-      // 合并：GitHub投稿（不在本地） + 本地投稿
-      const localIds = new Set(localSubs.map(s => s.id));
-      const ghOnly = ghSubs.filter(s => !localIds.has(s.id));
+      // 合并：GitHub 投稿 + 本地投稿（同一投稿以 issueUrl 去重）
+      const localIssueUrls = new Set(localSubs.map(s => s.issueUrl).filter(Boolean));
+      const ghOnly = ghSubs.filter(s => !localIssueUrls.has(s._issueUrl));
+      // 远端稿件编号可能与本地撞号，撞号时改用 GH-<序号> 以免审核卡片串位
+      const usedIds = new Set(localSubs.map(s => s.id));
+      ghOnly.forEach((s, i) => {
+        if (usedIds.has(s.id) && !/^GH-/.test(s.id)) {
+          s.id = 'GH-' + (s._issueNumber || (i + 1));
+        }
+        usedIds.add(s.id);
+      });
       let allSubs = [...ghOnly, ...localSubs];
       let subsPage = 1;
       const SUBS_PAGE_SIZE = 10;
@@ -9437,6 +9942,7 @@
               <div class="admin-sub-meta">
                 <span>作者：${escapeHtml(s.author||'')} (${escapeHtml(s.authorLevel||'')})</span>
                 <span>· ${new Date(s.at||0).toLocaleString('zh-CN')}</span>
+                ${s._issueUrl ? `<a href="${escapeAttr(s._issueUrl)}" target="_blank" rel="noopener" style="color:var(--gold-1);text-decoration:none;">· 在 GitHub 查看 #${s._issueNumber}</a>` : ''}
               </div>
             </div>
             <div class="admin-sub-title">${escapeHtml(s.title)}</div>
@@ -9602,9 +10108,10 @@
               githubSha: s._githubSha || null
             });
             if (!r2.ok) { ap.disabled = false; ap.textContent = t; return banner(r2.msg || '通过失败', 'err'); }
-            // 删除GitHub上的投稿文件
-            if (s._githubFile && s._githubSha) {
-              try { await deleteGitHubSubmission(s._githubFile, s._githubSha); } catch (e) {}
+            if (s._issueNumber) markIssueReviewed(s._issueNumber);
+            if (s._githubFile) {
+              markFileReviewed(s._githubFile);
+              if (s._githubSha) { try { await deleteGitHubSubmission(s._githubFile, s._githubSha); } catch (e) {} }
             }
             banner(`通过成功 · 已写入 ${r2.mergedEntry ? CAT_MAP[r2.mergedEntry.cat]?.name || r2.mergedEntry.cat : s.category}`, 'ok');
             ap.disabled = false; ap.textContent = t;
@@ -9619,9 +10126,10 @@
               githubSha: s._githubSha || null
             });
             if (!r2.ok) { rj.disabled = false; rj.textContent = t; return banner(r2.msg || '退回失败', 'err'); }
-            // 删除GitHub上的投稿文件
-            if (s._githubFile && s._githubSha) {
-              try { await deleteGitHubSubmission(s._githubFile, s._githubSha); } catch (e) {}
+            if (s._issueNumber) markIssueReviewed(s._issueNumber);
+            if (s._githubFile) {
+              markFileReviewed(s._githubFile);
+              if (s._githubSha) { try { await deleteGitHubSubmission(s._githubFile, s._githubSha); } catch (e) {} }
             }
             banner('已退回投稿' + (note ? `（备注：${note}）` : ''), 'ok');
             rj.disabled = false; rj.textContent = t;
@@ -9683,8 +10191,10 @@
               });
               if (r2.ok) {
                 ok++;
-                if (subObj?._githubFile && subObj?._githubSha) {
-                  try { await deleteGitHubSubmission(subObj._githubFile, subObj._githubSha); } catch (e) {}
+                if (subObj?._issueNumber) markIssueReviewed(subObj._issueNumber);
+                if (subObj?._githubFile) {
+                  markFileReviewed(subObj._githubFile);
+                  if (subObj?._githubSha) { try { await deleteGitHubSubmission(subObj._githubFile, subObj._githubSha); } catch (e) {} }
                 }
               } else fail++;
             }
@@ -9713,8 +10223,10 @@
               });
               if (r2.ok) {
                 ok++;
-                if (subObj?._githubFile && subObj?._githubSha) {
-                  try { await deleteGitHubSubmission(subObj._githubFile, subObj._githubSha); } catch (e) {}
+                if (subObj?._issueNumber) markIssueReviewed(subObj._issueNumber);
+                if (subObj?._githubFile) {
+                  markFileReviewed(subObj._githubFile);
+                  if (subObj?._githubSha) { try { await deleteGitHubSubmission(subObj._githubFile, subObj._githubSha); } catch (e) {} }
                 }
               } else fail++;
             }
@@ -9734,10 +10246,15 @@
         const res = await API.adminListSubmissions(v, '');
         let localFiltered = res.ok ? res.list : [];
         // GitHub投稿始终为待审核状态，仅在 pending/all 时显示
-        const localIds = new Set(localFiltered.map(s => s.id));
+        const localIssueUrls = new Set(localFiltered.map(s => s.issueUrl).filter(Boolean));
         let ghToAdd = [];
         if (v === 'pending' || v === 'all') {
-          ghToAdd = cachedGhSubs.filter(s => !localIds.has(s.id));
+          ghToAdd = cachedGhSubs.filter(s => !localIssueUrls.has(s._issueUrl));
+          const used = new Set(localFiltered.map(s => s.id));
+          ghToAdd.forEach((s, i) => {
+            if (used.has(s.id) && !/^GH-/.test(s.id)) s.id = 'GH-' + (s._issueNumber || (i + 1));
+            used.add(s.id);
+          });
         }
         allSubs = [...ghToAdd, ...localFiltered];
         subsPage = 1;
