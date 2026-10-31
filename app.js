@@ -343,8 +343,15 @@
         if (!f.name.endsWith('.json')) continue;
         if (done.indexOf(f.path) > -1) continue;
         try {
-          const fr = await fetch(f.download_url);
-          const data = await fr.json();
+          // 走 Contents API（api.github.com），raw.githubusercontent.com 在大陆不可达
+          const fr = await fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + encodeURIComponent(f.path) + '?ref=' + (cfg.branch || 'main'), { headers });
+          if (!fr.ok) continue;
+          const fd = await fr.json();
+          if (!fd || !fd.content) continue;
+          const bin = atob(String(fd.content).replace(/\s+/g, ''));
+          const bytes = new Uint8Array(bin.length);
+          for (let bi = 0; bi < bin.length; bi++) bytes[bi] = bin.charCodeAt(bi);
+          const data = JSON.parse(new TextDecoder('utf-8').decode(bytes));
           if (!data || !data.title) continue;
           data._githubFile = f.path;
           data._githubSha = f.sha;
