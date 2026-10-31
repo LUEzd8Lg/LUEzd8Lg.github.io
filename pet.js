@@ -94,6 +94,30 @@
     '> 好。这次算你赢。',
     '> 我可以陪你玩，直到你关掉这一页。'
   ];
+  /* 实用层：新档播报、随机、带读、进度 */
+  var FRESH_LINE = [
+    '> 检测到新档案。{n} 份。已放入队列。',
+    '> 库存更新。新增 {n} 份。',
+    '> 有新的东西进来了。{n} 份。'
+  ];
+  var RAND_LINE = [
+    '> 抽签。结果：《{t}》。',
+    '> 随机访问。目标：《{t}》。',
+    '> 闭着眼指了一份。《{t}》。'
+  ];
+  var READNEW_LINE = [
+    '> 这份你没读过：《{t}》。',
+    '> 扫描完毕。盲区一份：《{t}》。',
+    '> 带路。目标：《{t}》。'
+  ];
+  var REPORT_LINE = {
+    none: '> 阅读记录为空。档案不会自己读自己。',
+    low:  '> 已读 {r} / {n}。刚开始。前面还很长。',
+    mid:  '> 已读 {r} / {n}。过半之前，人最容易停下。',
+    high: '> 已读 {r} / {n}。接近读完。剩下的都是难啃的。',
+    all:  '> 已读 {r} / {n}。全部读完。不太正常。也很了不起。'
+  };
+  var GOTO_LINE = '> 目标：《{t}》。';
   var MOOD_NAME = { idle: '待机', curious: '好奇', alert: '警觉', sleepy: '低电', attached: '亲近' };
 
   /* 生机层：呼吸、心跳、数据流、哈欠、哼声 */
@@ -156,6 +180,10 @@
         '<button type="button" role="menuitem" data-act="cmd">终端</button>' +
         '<button type="button" role="menuitem" data-act="play">逗它一下</button>' +
         '<button type="button" role="menuitem" data-act="memory">它记得什么</button>' +
+        '<button type="button" role="menuitem" data-act="fresh">新档入库</button>' +
+        '<button type="button" role="menuitem" data-act="rand">随机档案</button>' +
+        '<button type="button" role="menuitem" data-act="report">阅读进度</button>' +
+        '<button type="button" role="menuitem" data-act="readnew">带读一篇</button>' +
         '<button type="button" role="menuitem" data-act="mute">静默 24 小时</button>' +
         '<button type="button" role="menuitem" data-act="sleep">休眠</button>' +
         '<button type="button" role="menuitem" data-act="home">回到右下角</button>' +
@@ -206,6 +234,7 @@
     s.cadence = (s.cadence === 'quiet' || s.cadence === 'chatty') ? s.cadence : 'normal';
     s.recallDay = s.recallDay || '';
     s.pat = +s.pat || 0;
+    if (!Array.isArray(s.knownIds)) s.knownIds = null;
     return s;
   }
   function save() {
@@ -315,6 +344,125 @@
     }, 11000);
   }
 
+  /* ---------- 实用功能：新档播报 / 随机 / 带读 / 进度 ---------- */
+  var pendingFresh = null;
+
+  function allEntries() {
+    var D = window.ARCHIVE_DATA;
+    if (!D || !Array.isArray(D.categories)) return [];
+    var out = [];
+    for (var i = 0; i < D.categories.length; i++) {
+      var cid = D.categories[i].id;
+      var arr = D[cid] || [];
+      for (var j = 0; j < arr.length; j++) {
+        if (arr[j] && arr[j].id) out.push({ cat: cid, id: arr[j].id, title: arr[j].title || String(arr[j].id) });
+      }
+    }
+    return out;
+  }
+  function entryKey(e) { return e.cat + ':' + e.id; }
+  function gotoEntry(e) {
+    location.hash = '#/entry/' + e.cat + '/' + encodeURIComponent(e.id);
+  }
+  function userName() {
+    try {
+      var a = JSON.parse(localStorage.getItem('wa_auth_v1') || 'null');
+      return (a && a.user) ? String(a.user) : '';
+    } catch (e) { return ''; }
+  }
+  function readKeys() {
+    var u = userName();
+    if (!u) return null;
+    var raw = {};
+    try { raw = JSON.parse(localStorage.getItem('wa_read_progress_v1') || '{}'); } catch (e) { raw = {}; }
+    var out = {}, pre = u + '|';
+    for (var k in raw) {
+      if (Object.prototype.hasOwnProperty.call(raw, k) && k.indexOf(pre) === 0) out[k.slice(pre.length)] = 1;
+    }
+    return out;
+  }
+  function syncKnown() {
+    var all = allEntries();
+    if (!all.length || !S) return [];
+    var fresh = [];
+    if (Array.isArray(S.knownIds)) {
+      var map = {};
+      for (var i = 0; i < S.knownIds.length; i++) map[S.knownIds[i]] = 1;
+      for (var j = 0; j < all.length; j++) {
+        if (!map[entryKey(all[j])]) fresh.push(all[j]);
+      }
+    }
+    S.knownIds = all.map(entryKey);
+    save();
+    return fresh;
+  }
+  function scheduleFresh() {
+    setTimeout(function () {
+      if (!S || !visible || S.sleeping || isMuted() || busy() || document.hidden) return;
+      var fresh = syncKnown();
+      if (!fresh.length) return;
+      pendingFresh = fresh;
+      say(pick(FRESH_LINE).replace('{n}', String(fresh.length)), 5600);
+    }, 9000);
+  }
+  function actFresh() {
+    if (pendingFresh && pendingFresh.length) {
+      var e0 = pendingFresh.shift();
+      say(GOTO_LINE.replace('{t}', shortTitle(e0.title)), 4200);
+      gotoEntry(e0);
+      return;
+    }
+    var fresh = syncKnown();
+    if (fresh.length) {
+      say(pick(FRESH_LINE).replace('{n}', String(fresh.length)) + '\n' + GOTO_LINE.replace('{t}', shortTitle(fresh[0].title)), 5600);
+      gotoEntry(fresh[0]);
+    } else {
+      say('> 没有新档案。库存无变化。', 3800);
+    }
+  }
+  function actRand() {
+    var all = allEntries();
+    if (!all.length) { say('> 库存为空。', 3200); return; }
+    var e = all[Math.floor(Math.random() * all.length)];
+    say(pick(RAND_LINE).replace('{t}', shortTitle(e.title)), 4600);
+    gotoEntry(e);
+  }
+  function actReport() {
+    if (!userName()) { say('> 先登录。我才能记住你读到了哪。', 4200); return; }
+    var all = allEntries();
+    if (!all.length) { say('> 库存为空。', 3200); return; }
+    var rk = readKeys() || {};
+    var n = all.length, r = 0;
+    for (var i = 0; i < all.length; i++) if (rk[entryKey(all[i])]) r++;
+    var pct = r / n;
+    var tpl = pct >= 1 ? REPORT_LINE.all : pct >= 0.6 ? REPORT_LINE.high : pct >= 0.25 ? REPORT_LINE.mid : REPORT_LINE.low;
+    if (!r) tpl = REPORT_LINE.none;
+    say(tpl.replace('{r}', String(r)).replace('{n}', String(n)), 5600);
+  }
+  function actReadNew() {
+    if (!userName()) { say('> 先登录。我才能记住你读到了哪。', 4200); return; }
+    var all = allEntries();
+    var rk = readKeys() || {};
+    var pool = [];
+    for (var i = 0; i < all.length; i++) if (!rk[entryKey(all[i])]) pool.push(all[i]);
+    if (!pool.length) { say('> 全部读过。库存里没有你的盲区了。', 4600); return; }
+    var e = pool[Math.floor(Math.random() * pool.length)];
+    say(pick(READNEW_LINE).replace('{t}', shortTitle(e.title)), 4600);
+    gotoEntry(e);
+  }
+  function cmdGo(arg) {
+    if (!arg) return '> 用法：go 关键词。';
+    var all = allEntries();
+    var low = String(arg).toLowerCase();
+    var hit = [];
+    for (var i = 0; i < all.length; i++) {
+      if (String(all[i].title).toLowerCase().indexOf(low) > -1) hit.push(all[i]);
+    }
+    if (!hit.length) return '> 没有匹配。库存里没有这个词。';
+    gotoEntry(hit[0]);
+    return '> 命中 ' + hit.length + ' 份。先去《' + shortTitle(hit[0].title) + '》。';
+  }
+
   /* ---------- 构建 ---------- */
   function build() {
     wrap = document.createElement('div');
@@ -361,6 +509,7 @@
     save();
     paint();
     scheduleRecall();
+    scheduleFresh();
   }
 
   function bump(n) {
@@ -666,7 +815,7 @@
   function cmdHelp() {
     var l = ['help', 'status'];
     if (stage >= 1) l.push('story', 'play');
-    if (stage >= 2) l.push('time');
+    if (stage >= 2) l.push('time', 'new', 'rand', 'go');
     if (stage >= 3) l.push('read');
     l.push('mute', 'wake', 'sleep', 'home');
     if (stage >= 5) l.push('13');
@@ -736,6 +885,18 @@
       if (stage < 3) { cmdSay('> 我不认识这条。输入 help。'); return; }
       cmdSay(cmdRead());
       return;
+    }
+    if (cmd === 'new' || cmd === 'fresh') {
+      if (stage < 2) { cmdSay('> 我不认识这条。输入 help。'); return; }
+      actFresh(); return;
+    }
+    if (cmd === 'rand') {
+      if (stage < 2) { cmdSay('> 我不认识这条。输入 help。'); return; }
+      actRand(); return;
+    }
+    if (cmd === 'go') {
+      if (stage < 2) { cmdSay('> 我不认识这条。输入 help。'); return; }
+      cmdSay(cmdGo(arg)); return;
     }
     if (cmd === '13') {
       if (stage < 5) { cmdSay('> 我不认识这条。输入 help。'); return; }
@@ -1292,6 +1453,14 @@
         play();
       } else if (act === 'memory') {
         memory();
+      } else if (act === 'fresh') {
+        actFresh();
+      } else if (act === 'rand') {
+        actRand();
+      } else if (act === 'report') {
+        actReport();
+      } else if (act === 'readnew') {
+        actReadNew();
       } else if (act === 'mute') {
         toggleMute();
       } else if (act === 'sleep') {
