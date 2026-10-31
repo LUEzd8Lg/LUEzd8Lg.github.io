@@ -178,6 +178,7 @@
       '<div class="t13-menu" id="t13-menu" role="menu">' +
         '<div class="t13-menu-head">CTRL-13 · 拾叁</div>' +
         '<button type="button" role="menuitem" data-act="cmd">终端</button>' +
+        '<button type="button" role="menuitem" data-act="profile">查看档案</button>' +
         '<button type="button" role="menuitem" data-act="play">逗它一下</button>' +
         '<button type="button" role="menuitem" data-act="memory">它记得什么</button>' +
         '<button type="button" role="menuitem" data-act="fresh">新档入库</button>' +
@@ -1449,6 +1450,9 @@
       var act = b.getAttribute('data-act');
       if (act === 'cmd') {
         openCmd();
+      } else if (act === 'profile') {
+        location.hash = '#/pet';
+        setTimeout(function () { if (visible && !S.sleeping) say('> 档案在那一页。不要盯着看太久。', 4200); }, 600);
       } else if (act === 'play') {
         play();
       } else if (act === 'memory') {
@@ -1526,6 +1530,12 @@
 
     /* 路由切换：详情页转向正文 */
     window.addEventListener('hashchange', function () { routeTick(false); });
+
+    /* 呼叫联动：观察体档案页上的「呼叫拾叁」 */
+    window.addEventListener('t13:summon', function () {
+      if (!visible) show();
+      poke();
+    });
 
     /* 滚动到底：瞥一眼底部 */
     window.addEventListener('scroll', function () {

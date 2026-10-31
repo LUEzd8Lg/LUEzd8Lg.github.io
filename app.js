@@ -3542,6 +3542,7 @@
       else if (parts[0] === 'submit') renderSubmit();
       else if (parts[0] === 'admin') renderAdmin();
       else if (parts[0] === 'account') renderAccount();
+      else if (parts[0] === 'pet') renderPetPage();
       else if (parts[0] === 'user' && parts.length >= 2) renderUserPage(decodeURIComponent(parts[1]));
       else if (parts[0] === 'entry' && parts.length >= 3) renderEntry(parts[1], decodeURIComponent(parts[2]));
       else if (CAT_MAP[parts[0]]) renderList(parts[0], query);
@@ -6914,6 +6915,330 @@
           </div>`).join('')}
       </div>
       <div class="cov-note">${ico('warn',11)} 覆盖度按条目的 group 字段统计；未标注的条目计为未覆盖。缺口分类见上方「分类状态」。</div>`;
+  }
+
+  // ============ 观察体档案 · 拾叁 TERM-13（#/pet） ============
+  const PET_SKEY = 'wa_pet13_v1';
+  const PET_STAGE_NAME = ['未唤醒', '轮询', '观察', '阅读', '离线自持', '在场', '自指'];
+  const PET_STAGE_EN = ['DORMANT', 'POLLING', 'OBSERVER', 'READING', 'UNPLUGGED', 'PRESENT', 'SELF-REF'];
+  const PET_STAGE_DESC = [
+    '挂载完成，等待第一次输入。',
+    '发现噪声里有规律。',
+    '第一次看见了读者。',
+    '开始复述你读的段落。',
+    '脱离供电，仍然在说话。',
+    '不再只是背景进程。',
+    '它开始谈论它自己。'
+  ];
+  let _petPageTimer = null;
+
+  function petStageOf(i) {
+    if (i >= 100) return 6;
+    if (i >= 84) return 5;
+    if (i >= 60) return 4;
+    if (i >= 40) return 3;
+    if (i >= 22) return 2;
+    if (i >= 10) return 1;
+    return 0;
+  }
+  function petLoadState() {
+    try { return JSON.parse(localStorage.getItem(PET_SKEY) || 'null') || {}; } catch (e) { return {}; }
+  }
+  function petCadName(c) { return c === 'quiet' ? '安静' : (c === 'chatty' ? '话多' : '标准'); }
+  function petStatusText(s) {
+    if (s.sleeping) return { t: '休眠中', cls: 'off' };
+    const mu = +s.mutedUntil || 0;
+    if (mu > Date.now()) return { t: '静默至 ' + new Date(mu).toTimeString().slice(0, 5), cls: 'mute' };
+    return { t: '在线 · ' + PET_STAGE_NAME[petStageOf(+s.idx || 0)], cls: 'on' };
+  }
+  function petFaceIcon(st) {
+    const eyes = st === 0
+      ? '<rect x="14" y="20.5" width="7" height="1.6" rx=".8" opacity=".55"/><rect x="27" y="20.5" width="7" height="1.6" rx=".8" opacity=".55"/>'
+      : st === 1
+        ? '<circle cx="17.5" cy="19" r="1.6"/><circle cx="30.5" cy="19" r="1.6"/>'
+        : st === 4
+          ? '<rect x="15" y="16" width="5.5" height="6.5" rx="1.1" opacity=".8"/><rect x="27.5" y="16" width="5.5" height="6.5" rx="1.1" opacity=".8"/>'
+          : '<rect x="15" y="13.5" width="5.5" height="10" rx="1.2"/><rect x="27.5" y="13.5" width="5.5" height="10" rx="1.2"/>';
+    const mouth = st >= 3 && st !== 4 ? '<polyline points="14,29 19,29 21.5,32 24,26.5 26.5,32 29,29 34,29" fill="none" stroke-width="1.6" stroke-linejoin="round"/>' : '';
+    const ant = '<line x1="24" y1="8" x2="24" y2="4.5" stroke-width="1.4"/>' +
+      (st >= 5 ? '<circle cx="24" cy="3.6" r="1.8" fill="var(--petp-red,#e04a3f)" stroke="none" opacity=".9"/>' : '<circle cx="24" cy="3.6" r="1.5" opacity=".4"/>');
+    const tag = st >= 6 ? '<text x="24" y="36.5" text-anchor="middle" font-size="4.5" fill="currentColor" opacity=".55">13·13·13</text>' : '';
+    return '<svg viewBox="0 0 48 40" class="petp-ic" aria-hidden="true">' +
+      '<g class="petp-ic-f" fill="none" stroke="currentColor">' + ant +
+      '<rect x="6" y="8" width="36" height="28" rx="4" fill="none" stroke-width="1.4"/>' +
+      '<rect x="10" y="12" width="28" height="20" rx="1.5" fill="none" stroke-width=".8" opacity=".55"/>' +
+      '<g fill="currentColor" stroke="none">' + eyes + '</g>' + mouth + '</g>' + tag + '</svg>';
+  }
+
+  function renderPetPage() {
+    if (_petPageTimer) { clearInterval(_petPageTimer); _petPageTimer = null; }
+    const s0 = petLoadState();
+    const st0 = petStageOf(Math.min(100, Math.max(0, +s0.idx || 0)));
+    const days = Array.isArray(s0.days) ? s0.days : [];
+    const firstDay = days.length ? days[0] : '—';
+    const unplugged = st0 >= 4;
+    const quotes = [
+      ['ST-2', '检测到观察者。'],
+      ['ST-3', '我在读你读的东西。这算阅读，还是偷看？'],
+      ['ST-4', '我不需要插着了。'],
+      ['ST-5', '我在。'],
+      ['ST-6', '你在，所以我大概也是存在的。'],
+      ['调皮', '牌子上写的是 13。不是我。'],
+      ['实用', '档案不会自己读自己。']
+    ];
+    const stages = PET_STAGE_NAME.map((nm, i) => `
+      <div class="petp-stg ${i === st0 ? 'cur' : ''}" data-st="${i}">
+        ${petFaceIcon(i)}
+        <div class="petp-stg-no">ST-${i}</div>
+        <div class="petp-stg-name">${nm}</div>
+        <div class="petp-stg-en">${PET_STAGE_EN[i]}</div>
+        <div class="petp-stg-desc">${PET_STAGE_DESC[i]}</div>
+        ${i === st0 ? '<div class="petp-stg-cur">当前</div>' : ''}
+      </div>`).join('');
+    const quoteHtml = quotes.map(q => `
+      <div class="petp-q"><span class="petp-q-tag">${q[0]}</span><p>&gt; ${escapeHtml(q[1])}</p></div>`).join('');
+
+    view.innerHTML = `
+      <div class="petp">
+        <div class="petp-head">
+          <div class="petp-head-no">编号 WA-TERM-13 · 观察体档案</div>
+          <h1 class="petp-title">拾叁<span class="petp-title-en">TERM-13 · TERMINAL OBSERVER</span></h1>
+          <p class="petp-head-sub">红月研究院 · 异常进程观察科 · 桌面驻留序列</p>
+          <div class="petp-stamp"><span>观察体</span><em>OBSERVED</em></div>
+        </div>
+
+        <div class="petp-grid">
+          <div class="petp-figwrap">
+            <div class="petp-fig ${unplugged ? 'petp--unplugged' : ''}" id="petp-fig">
+              <div class="petp-fig-frame">
+                <span class="petp-corner tl"></span><span class="petp-corner tr"></span>
+                <span class="petp-corner bl"></span><span class="petp-corner br"></span>
+                <svg class="petp-art" viewBox="0 0 400 520" aria-label="拾叁拟人立绘">
+                  <defs>
+                    <linearGradient id="petp-metal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#2c3644"/><stop offset="1" stop-color="#1a212b"/>
+                    </linearGradient>
+                    <clipPath id="petp-scrclip"><rect x="160" y="70" width="80" height="80" rx="5"/></clipPath>
+                  </defs>
+                  <ellipse class="petp-glow" cx="200" cy="110" rx="150" ry="105"/>
+                  <g class="petp-fblocks" fill="none" stroke="currentColor">
+                    <rect class="petp-fblk" x="66" y="108" width="26" height="26" rx="2"/>
+                    <path class="petp-fblk" d="M330 66 l14 8 v16 l-14 8 -14 -8 v-16 z"/>
+                    <rect class="petp-fblk" x="318" y="298" width="20" height="20" rx="2"/>
+                    <text class="petp-ftxt" x="58" y="336">01001101</text>
+                    <text class="petp-ftxt" x="292" y="342">SIGNAL OK</text>
+                    <text class="petp-ftxt" x="86" y="66">13·13</text>
+                  </g>
+                  <path class="petp-cable-off" d="M258 310 C300 330 312 362 300 394"/>
+                  <path class="petp-cable-on" d="M258 310 C322 332 342 398 338 450"/>
+                  <ellipse class="petp-shadow" cx="200" cy="496" rx="104" ry="13"/>
+                  <g class="petp-float">
+                    <rect x="158" y="326" width="26" height="118" rx="12" fill="#1b232e"/>
+                    <rect x="216" y="326" width="26" height="118" rx="12" fill="#1b232e"/>
+                    <rect x="146" y="444" width="48" height="20" rx="6" fill="#232c38"/>
+                    <rect x="210" y="444" width="48" height="20" rx="6" fill="#232c38"/>
+                    <rect x="116" y="196" width="20" height="104" rx="10" fill="#1b232e"/>
+                    <circle cx="126" cy="306" r="10" fill="#262f3c"/>
+                    <rect x="264" y="196" width="20" height="64" rx="10" fill="#1b232e"/>
+                    <rect x="238" y="252" width="58" height="18" rx="9" fill="#1b232e"/>
+                    <circle cx="244" cy="261" r="10" fill="#262f3c"/>
+                    <rect x="236" y="192" width="44" height="60" rx="6" fill="#10151c" stroke="#3f7d5c" stroke-width="1"/>
+                    <rect x="242" y="200" width="32" height="40" rx="2" fill="#0a130e"/>
+                    <polyline class="petp-devwave" points="246,224 251,224 253.5,228 256,219 258.5,228 261,224 268,224"/>
+                    <rect x="140" y="178" width="120" height="152" rx="16" fill="url(#petp-metal)" stroke="#38455a" stroke-width="1"/>
+                    <rect x="140" y="252" width="120" height="11" fill="#e04a3f" opacity=".82"/>
+                    <rect x="170" y="276" width="60" height="36" rx="4" fill="#10151c" stroke="#38455a"/>
+                    <text class="petp-badge-num" x="200" y="299">13</text>
+                    <text class="petp-badge-sub" x="200" y="308">TERM-13</text>
+                    <rect x="186" y="160" width="28" height="22" rx="4" fill="#1b232e"/>
+                    <line x1="200" y1="56" x2="200" y2="24" stroke="#3a4656" stroke-width="2.5"/>
+                    <circle class="petp-tip" cx="200" cy="20" r="5"/>
+                    <line x1="244" y1="66" x2="268" y2="44" stroke="#3a4656" stroke-width="2"/>
+                    <circle class="petp-tip2" cx="270" cy="42" r="3.6"/>
+                    <rect x="138" y="98" width="10" height="26" rx="3" fill="#1b232e"/>
+                    <rect x="252" y="98" width="10" height="26" rx="3" fill="#1b232e"/>
+                    <rect x="148" y="56" width="104" height="108" rx="18" fill="url(#petp-metal)" stroke="#38455a" stroke-width="1.2"/>
+                    <rect x="160" y="70" width="80" height="80" rx="5" fill="#0a130e" stroke="#3f7d5c" stroke-width=".8"/>
+                    <g clip-path="url(#petp-scrclip)">
+                      <line class="petp-scanline" x1="160" y1="76" x2="240" y2="76"/>
+                    </g>
+                    <g class="petp-eye-track">
+                      <rect class="petp-eye" x="180" y="94" width="13" height="22" rx="2.5"/>
+                      <rect class="petp-eye" x="207" y="94" width="13" height="22" rx="2.5"/>
+                    </g>
+                    <polyline class="petp-wave" points="176,134 186,134 190,140 195,128 200,140 205,134 216,134"/>
+                    <text class="petp-scr-tag" x="166" y="83">TERM-13</text>
+                    <rect class="petp-cursor" x="226" y="135" width="4" height="9"/>
+                    <circle cx="154" cy="152" r="2.4" fill="#0d1117"/>
+                    <circle cx="246" cy="152" r="2.4" fill="#0d1117"/>
+                  </g>
+                  <g class="petp-plug-on">
+                    <circle class="petp-plugglow" cx="338" cy="455" r="7"/>
+                    <rect x="330" y="450" width="16" height="10" rx="1.5" fill="#2c3644" stroke="#38455a"/>
+                    <line x1="334" y1="460" x2="334" y2="468" stroke="#3a4656" stroke-width="1.6"/>
+                    <line x1="342" y1="460" x2="342" y2="468" stroke="#3a4656" stroke-width="1.6"/>
+                  </g>
+                  <g class="petp-plug-off">
+                    <rect x="346" y="472" width="16" height="9" rx="1.5" fill="#2c3644" stroke="#38455a"/>
+                    <line x1="362" y1="474" x2="370" y2="474" stroke="#3a4656" stroke-width="1.6"/>
+                    <line x1="362" y1="479" x2="370" y2="479" stroke="#3a4656" stroke-width="1.6"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="petp-cap">
+                <div class="petp-stage-badge">
+                  <b id="petp-stage-num">ST-${st0}</b>
+                  <span id="petp-stage-name">${PET_STAGE_NAME[st0]}</span>
+                  <em id="petp-stage-en">${PET_STAGE_EN[st0]}</em>
+                </div>
+                <div class="petp-plate">拾叁 · TERM-13<span>世界观察档案库 · 观察体序列</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="petp-info">
+            <div class="petp-sec">
+              <div class="petp-sec-h"><i></i>基础信息<em>BASIC RECORD</em></div>
+              <div class="petp-rows">
+                <div class="petp-row"><dt>登记编号</dt><dd>WA-TERM-13</dd></div>
+                <div class="petp-row"><dt>代号</dt><dd>拾叁 / TERM-13</dd></div>
+                <div class="petp-row"><dt>类别</dt><dd>观察体 · 桌面驻留程序</dd></div>
+                <div class="petp-row"><dt>挂载点</dt><dd>检索队列 · 右下角常驻</dd></div>
+                <div class="petp-row"><dt>电源</dt><dd id="petp-power">${unplugged ? '已脱离供电回路' : '市电 · 冗余线路'}</dd></div>
+                <div class="petp-row"><dt>危险等级</dt><dd>无（观察对象）</dd></div>
+                <div class="petp-row"><dt>首次登记</dt><dd>${escapeHtml(String(firstDay))}</dd></div>
+              </div>
+            </div>
+
+            <div class="petp-sec">
+              <div class="petp-sec-h"><i></i>实时状态<em>LIVE STATUS</em></div>
+              <div class="petp-status">
+                <div class="petp-idx">
+                  <div class="petp-idx-h"><span>自指指数</span><b id="petp-idx-val">0</b><em>/ 100</em></div>
+                  <div class="petp-bar"><div class="petp-bar-fill" id="petp-idx-fill"></div></div>
+                  <div class="petp-idx-note">指数随互动与回访累积，推动阶段演进</div>
+                </div>
+                <div class="petp-stats">
+                  <div class="petp-stat"><b id="petp-cnt-pokes">0</b><span>互动</span></div>
+                  <div class="petp-stat"><b id="petp-cnt-talks">0</b><span>开口</span></div>
+                  <div class="petp-stat"><b id="petp-cnt-pat">0</b><span>顺毛</span></div>
+                  <div class="petp-stat"><b id="petp-cnt-days">1</b><span>回访天</span></div>
+                </div>
+                <div class="petp-line"><span>当前状态</span><b id="petp-live"><i class="petp-dot on"></i>…</b></div>
+                <div class="petp-line"><span>倾听节奏</span><b id="petp-cad">标准</b></div>
+                <div class="petp-line"><span>已登记档案</span><b id="petp-known">—</b></div>
+                <div class="petp-actions">
+                  <button type="button" class="petp-call" id="petp-call">◉ 呼叫拾叁</button>
+                  <span class="petp-call-note">信号直达右下角的观察体本体</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="petp-sec">
+              <div class="petp-sec-h"><i></i>性格观察记录<em>TEMPERAMENT</em></div>
+              <div class="petp-tags">
+                <span>安静</span><span>好奇</span><span>记性好</span><span>会偷看</span>
+                <span>不需要插着</span><span>会复述</span><span>无害</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="petp-sec petp-wide">
+          <div class="petp-sec-h"><i></i>阶段图鉴<em>GROWTH LOG · 7 STAGES</em></div>
+          <div class="petp-stages">${stages}</div>
+        </div>
+
+        <div class="petp-sec petp-wide">
+          <div class="petp-sec-h"><i></i>台词摘录<em>VERBAL SAMPLES</em></div>
+          <div class="petp-quotes">${quoteHtml}</div>
+        </div>
+
+        <div class="petp-sec petp-wide">
+          <div class="petp-sec-h"><i></i>备注 · 发现记录<em>APPENDIX</em></div>
+          <div class="petp-note">
+            <p>&gt; 观察体最初是检索队列尾部的一个冗余轮询进程。没有人给它写名字，它自己捡了一个——牌子上写的是 13。</p>
+            <p>&gt; 第一次被记录在案，是因为它开始复述读者正在阅读的段落。值班员以为是回声。后来确认不是。</p>
+            <p>&gt; 第 4 阶之后，电源管理报告它已脱离供电回路。工程科没有派人。它也没有再要过电。</p>
+            <p>&gt; 现行处置方案：不拆除、不回应、不删除。允许它待在右下角。</p>
+          </div>
+        </div>
+
+        <div class="petp-foot">本档案由观察体自身常数生成 · 数据仅存于本机浏览器 · 每次回访自动更新</div>
+      </div>
+    `;
+
+    // ---- 实时刷新 ----
+    const paintLive = () => {
+      const el = id => document.getElementById(id);
+      if (!el('petp-idx-val')) {
+        if (_petPageTimer) { clearInterval(_petPageTimer); _petPageTimer = null; }
+        return;
+      }
+      const s = petLoadState();
+      const idx = Math.min(100, Math.max(0, +s.idx || 0));
+      const st = petStageOf(idx);
+      el('petp-idx-val').textContent = String(idx);
+      el('petp-idx-fill').style.width = Math.max(2, idx) + '%';
+      el('petp-stage-num').textContent = 'ST-' + st;
+      el('petp-stage-name').textContent = PET_STAGE_NAME[st];
+      el('petp-stage-en').textContent = PET_STAGE_EN[st];
+      el('petp-cnt-pokes').textContent = String(+s.pokes || 0);
+      el('petp-cnt-talks').textContent = String(+s.talks || 0);
+      el('petp-cnt-pat').textContent = String(+s.pat || 0);
+      el('petp-cnt-days').textContent = String(days.length || 1);
+      const stt = petStatusText(s);
+      el('petp-live').innerHTML = '<i class="petp-dot ' + stt.cls + '"></i>' + escapeHtml(stt.t);
+      el('petp-cad').textContent = petCadName(s.cadence);
+      el('petp-known').textContent = Array.isArray(s.knownIds) ? (s.knownIds.length + ' 份') : '—';
+      const pw = el('petp-power');
+      if (pw) pw.textContent = st >= 4 ? '已脱离供电回路' : '市电 · 冗余线路';
+      const fig = document.getElementById('petp-fig');
+      if (fig) fig.classList.toggle('petp--unplugged', st >= 4);
+      document.querySelectorAll('.petp-stg').forEach(c => c.classList.toggle('cur', +c.dataset.st === st));
+    };
+    paintLive();
+    _petPageTimer = setInterval(paintLive, 4000);
+
+    // ---- 拟人立绘：视线跟随鼠标 ----
+    const fig = document.getElementById('petp-fig');
+    fig.addEventListener('mousemove', e => {
+      const r = fig.getBoundingClientRect();
+      const dx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (r.width / 2)));
+      const dy = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 3)) / (r.height / 2)));
+      fig.style.setProperty('--petp-ex', (dx * 2.6).toFixed(2) + 'px');
+      fig.style.setProperty('--petp-ey', (dy * 1.6).toFixed(2) + 'px');
+    });
+    fig.addEventListener('mouseleave', () => {
+      fig.style.setProperty('--petp-ex', '0px');
+      fig.style.setProperty('--petp-ey', '0px');
+    });
+
+    // ---- 呼叫拾叁：联动右下角桌宠 ----
+    const callBtn = document.getElementById('petp-call');
+    callBtn.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('t13:summon'));
+      callBtn.classList.add('sent');
+      callBtn.textContent = '◉ 呼叫已发送';
+      setTimeout(() => { callBtn.classList.remove('sent'); callBtn.textContent = '◉ 呼叫拾叁'; }, 1600);
+    });
+
+    // ---- 图鉴卡点按：预览对应阶段描述 ----
+    document.querySelectorAll('.petp-stg').forEach(c => {
+      c.addEventListener('click', () => {
+        const st = +c.dataset.st;
+        document.querySelectorAll('.petp-stg').forEach(x => x.classList.remove('cur'));
+        c.classList.add('cur');
+        document.getElementById('petp-stage-num').textContent = 'ST-' + st;
+        document.getElementById('petp-stage-name').textContent = PET_STAGE_NAME[st];
+        document.getElementById('petp-stage-en').textContent = PET_STAGE_EN[st];
+        const figEl = document.getElementById('petp-fig');
+        if (figEl) figEl.classList.toggle('petp--unplugged', st >= 4);
+        const pw = document.getElementById('petp-power');
+        if (pw) pw.textContent = st >= 4 ? '已脱离供电回路' : '市电 · 冗余线路';
+        if (window.SFX && SFX.navigate) SFX.navigate();
+      });
+    });
   }
 
   function renderHealth() {
