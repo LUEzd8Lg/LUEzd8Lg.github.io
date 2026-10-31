@@ -143,7 +143,7 @@ html.theme-holo .t13{
   transform-origin:center top;
 }
 .t13-ant{stroke:var(--p-line);stroke-width:1;fill:none;opacity:.85}
-.t13-tip{fill:var(--p-red);opacity:.9}
+.t13-tip{fill:var(--p-red);opacity:.9;transform-box:fill-box;transform-origin:center}
 .t13-halo{fill:var(--p-glow);opacity:.14}
 .t13-eye{fill:var(--p-eye);filter:drop-shadow(0 0 6px var(--p-glow))}
 .t13-eye-track{transform:translate(var(--ex,0px),var(--ey,0px));transition:transform .18s ease-out}
@@ -441,6 +441,140 @@ html.theme-light .t13p-cad-btn.active{background:rgba(0,0,0,.04)}
   opacity:.8;
 }
 
+/* ---------- 情绪 ---------- */
+.t13[data-mood="curious"] .t13-eye{filter:drop-shadow(0 0 9px var(--p-glow))}
+.t13[data-mood="curious"] .t13-ring{opacity:.42}
+.t13[data-mood="curious"] .t13-tip{opacity:1}
+.t13[data-mood="alert"] .t13-eye{filter:drop-shadow(0 0 13px var(--p-glow))}
+.t13[data-mood="alert"] .t13-ring{opacity:.72;stroke-dasharray:none}
+.t13[data-mood="alert"] .t13-crack{opacity:.95}
+.t13[data-mood="sleepy"] .t13-eye{opacity:.48}
+.t13[data-mood="sleepy"] .t13-halo{opacity:.06}
+.t13[data-mood="attached"] .t13-halo{opacity:.24}
+.t13[data-mood="attached"] .t13-plate{stroke:var(--p-red)}
+
+/* ---------- 微动作 ---------- */
+.t13.blink2 .t13-eye-inner{animation:t13-blink2 1.15s ease-in-out}
+@keyframes t13-blink2{
+  0%,100%{transform:scaleY(1)}
+  16%,28%{transform:scaleY(.07)}
+  44%,58%{transform:scaleY(.07)}
+  70%{transform:scaleY(1)}
+}
+.t13.lean:not(.reading):not(.dragging) .t13-body{transform:rotate(2.6deg)}
+.t13.lean-l:not(.reading):not(.dragging) .t13-body{transform:rotate(-2.8deg)}
+.t13.antenna .t13-tip{animation:t13-tip .9s ease-in-out}
+@keyframes t13-tip{
+  0%,100%{transform:scale(1);opacity:.9}
+  45%{transform:scale(1.55);opacity:1}
+}
+.t13.look .t13-eye-track{transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+
+/* ---------- 生机：呼吸 / 心跳灯 / 数据流 / 哈欠 / 受惊 ---------- */
+.t13-body svg{animation:t13-breathe 4.8s ease-in-out infinite}
+@keyframes t13-breathe{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.012,1.022)}
+}
+.t13.asleep .t13-body svg,
+.t13.eyes-shut .t13-body svg{animation-play-state:paused}
+.t13.asleep .t13-body svg{animation:none}
+
+.t13-led{fill:var(--p-red);animation:t13-heart 3.4s ease-in-out infinite}
+@keyframes t13-heart{
+  0%,100%{opacity:.26}
+  7%{opacity:1}
+  14%{opacity:.36}
+  21%{opacity:.85}
+  32%{opacity:.28}
+}
+.t13[data-mood="alert"] .t13-led{animation-duration:1.7s}
+.t13[data-mood="sleepy"] .t13-led,
+.t13.asleep .t13-led{animation-duration:5.8s}
+.t13-body[data-stage="0"] .t13-led{animation:none;opacity:.12}
+
+.t13-screen{transition:opacity .5s}
+.t13-stream{
+  fill:var(--p-eye);
+  font-family:var(--f-mono,'Consolas',monospace);
+  font-size:5px;
+  letter-spacing:1.2px;
+  opacity:0;
+  transform-box:fill-box;
+}
+.t13.streaming .t13-stream{animation:t13-stream 2.8s linear}
+@keyframes t13-stream{
+  0%{opacity:0;transform:translateY(9px)}
+  14%{opacity:.8}
+  78%{opacity:.55}
+  100%{opacity:0;transform:translateY(-56px)}
+}
+
+.t13.yawn .t13-lid{transform:scaleY(.72);transition:transform .55s ease-in-out}
+.t13.yawn .t13-screen{opacity:.72}
+.t13.yawn .t13-eye{opacity:.35}
+
+.t13.startle .t13-body svg{animation:t13-startle .65s ease-out}
+@keyframes t13-startle{
+  0%,100%{transform:none}
+  28%{transform:translateX(2.4px) rotate(-1.6deg) scale(.985)}
+  62%{transform:translateX(-1px) rotate(.6deg)}
+}
+
+/* ---------- 终端指令台 ---------- */
+.t13-cmd{
+  position:absolute;
+  right:-4px;
+  bottom:calc(100% + 12px);
+  width:214px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 9px;
+  background:var(--p-bubble);
+  border:1px solid var(--p-line);
+  font-family:var(--f-mono,'Consolas',monospace);
+  font-size:10px;
+  line-height:1.6;
+  color:var(--p-btxt);
+  opacity:0;
+  transform:translateY(5px);
+  transition:opacity .2s,transform .2s;
+  pointer-events:none;
+  z-index:6;
+}
+.t13-cmd.on{opacity:1;transform:none;pointer-events:auto}
+.t13-cmd-p{color:var(--p-red);letter-spacing:.1em;flex:none}
+.t13-cmd-in{
+  flex:1;
+  min-width:0;
+  padding:0;
+  background:none;
+  border:0;
+  outline:none;
+  font:inherit;
+  color:var(--p-eye);
+  caret-color:var(--p-red);
+  user-select:text;
+  -webkit-user-select:text;
+}
+.t13 .t13-cmd-in{cursor:text !important}
+.t13.cmd-on .t13-bubble{bottom:calc(100% + 46px)}
+
+/* ---------- 手势暗令：摸头 / 眩晕 ---------- */
+.t13.pat .t13-lid{transform:scaleY(.42);transition:transform .55s ease-in-out}
+.t13.pat .t13-eye{opacity:.5}
+.t13.pat .t13-halo{opacity:.26}
+.t13.dizzy .t13-body svg{animation:t13-dizzy 1.4s ease-in-out}
+@keyframes t13-dizzy{
+  0%,100%{transform:rotate(0) translateX(0)}
+  18%{transform:rotate(-2.6deg) translateX(-2px)}
+  38%{transform:rotate(2.6deg) translateX(2px)}
+  58%{transform:rotate(-1.8deg) translateX(-1.4px)}
+  78%{transform:rotate(1.4deg) translateX(1px)}
+}
+.t13.hidden-out{opacity:0 !important;pointer-events:none !important;transition:opacity .35s}
+
 /* ---------- 移动端 ---------- */
 @media (max-width:768px){
   .t13{
@@ -450,17 +584,21 @@ html.theme-light .t13p-cad-btn.active{background:rgba(0,0,0,.04)}
     height:92px;
   }
   .t13-bubble{max-width:172px;font-size:9.5px;padding:6px 9px}
+  .t13-cmd{width:172px;font-size:9.5px;padding:5px 8px}
   .t13-menu{width:130px;bottom:2px}
 }
 
 /* ---------- 无障碍 / 省电 ---------- */
 @media (prefers-reduced-motion:reduce){
-  .t13-stage,.t13-body,.t13-eye-inner,.t13-eye,.t13-bootline,.t13-screen,.t13-lid,
+  .t13-stage,.t13-body,.t13-body svg,.t13-eye-inner,.t13-eye,.t13-tip,.t13-led,.t13-stream,
+  .t13-bootline,.t13-screen,.t13-lid,
   .t13p-live i,.t13p-bar i{animation:none !important}
   .t13{transition:opacity .2s}
   .t13-body,.t13-eye-track,.t13-lid,.t13-plate-g,.t13p-bar i{transition:none !important}
   .t13.dragging .t13-body,
   .t13.reading .t13-body,
-  .t13.glance .t13-body{transform:none}
+  .t13.glance .t13-body,
+  .t13.lean .t13-body,
+  .t13.lean-l .t13-body{transform:none !important}
   .t13.snapping{transition:opacity .2s}
 }
