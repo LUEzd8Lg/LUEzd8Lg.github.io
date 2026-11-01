@@ -4536,7 +4536,12 @@
 
     const viewMode = query.get('view') || (window.innerWidth <= 768 ? 'list' : (localStorage.getItem('wa_view') || 'grid'));
     let listHtml;
-    if (catId === 'deities') listHtml = htmlDeityGrid(pageEntries2, q);
+    if (catId === 'deities') {
+      // 神祇图鉴支持三视图：卡片（默认） / 列表 / 文件清单
+      if (viewMode === 'list') listHtml = htmlEntryList(pageEntries2, catId, q);
+      else if (viewMode === 'files') listHtml = htmlFileManifest(pageEntries2, catId);
+      else listHtml = htmlDeityGrid(pageEntries2, q);
+    }
     else if (catId === 'timelines') listHtml = renderWorldHistory();
     else if (catId === 'eras') {
       // 纪元卷宗同样支持三视图：分组卡片（默认） / 列表 / 文件清单
@@ -4625,7 +4630,7 @@
         </select>` : ''}
         <label>排序</label><select id="list-sort">${sortOptions}</select>
         <button id="adv-toggle" type="button" class="btn btn-mini adv-toggle" style="border:1px solid var(--border);padding:5px 10px;font-family:var(--f-mono);font-size:10px;background:var(--bg);color:var(--text);cursor:pointer;">高级筛选 ${advOpen?'▲':'▼'}</button>
-        ${['anomalies','organizations','eras'].includes(catId) ? `
+        ${['anomalies','organizations','eras','deities'].includes(catId) ? `
         <div class="view-toggle" id="view-toggle" title="切换视图">
           <button type="button" data-view="grid" class="${viewMode==='grid'?'active':''}" title="${catId==='eras'?'纪元分组视图':'卡片视图'}">
             <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -5096,7 +5101,7 @@
       const idTxt = e.id;
       const title = highlightKeyword(e.title, kw);
       const codeTxt = (e.code && e.code !== e.title) ? highlightKeyword(e.code, kw) : '';
-      const cls = e.class || (catId === 'organizations' ? 'org' : 'neutral');
+      const cls = catId === 'deities' ? '' : (e.class || (catId === 'organizations' ? 'org' : 'neutral'));
       const clsName = DATA.classLegend.find(c => c.code === cls)?.name || '';
       const tagHtml = (e.tags || []).slice(0, 3).map(t => `<span class="entry-list-tag">${highlightKeyword(t, kw)}</span>`).join('');
       const bodyText = (e.body || '').replace(/<[^>]+>/g, '').trim();
@@ -5185,6 +5190,9 @@
       const idTxt = e.id;
       const codeTxt = e.code || e.id;
       const summary = e.summary && e.summary.trim() ? e.summary : '（暂无简介）';
+      const DEI_KINDS = ['十二旧神', '从属神', '神嗣', '堕神', '独立神', '半神', '圣徒', '假神'];
+      const kind = (e.tags || []).find(t => DEI_KINDS.indexOf(t) > -1) || '';
+      const kindHtml = kind ? `<div class="ec-meta"><span class="ec-meta-dot">${ico('star',12)} ${highlightKeyword(kind, kw)}</span></div>` : '';
       const tagHtml = (e.tags || []).slice(0, 3).map(t => `<span class="ec-tag">${highlightKeyword(t, kw)}</span>`).join('');
       const bodyText = (e.body || '').replace(/<[^>]+>/g, '').trim();
       const wordCount = bodyText.length;
@@ -5208,6 +5216,7 @@
               </div>
             </div>
             <div class="anom-body-mid">
+              ${kindHtml}
               <div class="ec-summary">${highlightKeyword(summary, kw)}</div>
             </div>
             <div class="entry-card-foot">
