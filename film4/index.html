@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宣传片 · 世界观察档案库</title>
+<meta name="description" content="《世界观察档案库》宣传片 — 一个世界，靠被读而存在。">
+<meta property="og:title" content="世界观察档案库 · 宣传片">
+<meta property="og:description" content="一个世界，靠被读而存在。">
+<meta property="og:image" content="poster.jpg">
+<link rel="icon" type="image/webp" href="../favicon.webp">
+<style>
+  :root{ --bg:#000; --fg:#dcdcdc; --dim:#8a8a8a; --line:rgba(226,226,226,.14); --red:#c0392b;
+    --f-serif:'Noto Serif SC','Source Han Serif SC','SimSun','Songti SC',serif;
+    --f-mono:'Cascadia Code','Consolas','Courier New',monospace; }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:var(--f-serif);}
+  body{display:flex;flex-direction:column;min-height:100vh;}
+  a{color:inherit;text-decoration:none}
+  header{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--line);
+    font-family:var(--f-mono);font-size:11px;letter-spacing:.24em;color:var(--dim);}
+  header a:hover{color:#fff}
+  header .sp{flex:1}
+  header b{color:#e8e8e8;font-weight:400}
+  main{flex:1;display:flex;align-items:center;justify-content:center;padding:28px 24px 12px;flex-direction:column;gap:22px}
+  .frame{width:min(1400px,100%);position:relative;border:1px solid var(--line);background:#050505;
+    box-shadow:0 40px 120px rgba(0,0,0,.9);}
+  .frame video{display:block;width:100%;height:auto;background:#000}
+  .cover{position:absolute;inset:0;display:grid;place-items:center;cursor:pointer;
+    background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.62));transition:opacity .4s}
+  .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.7;filter:grayscale(.2)}
+  .cover .play{position:relative;display:grid;place-items:center;gap:14px;text-align:center}
+  .cover .disc{width:88px;height:88px;border:1px solid rgba(255,255,255,.6);border-radius:50%;
+    display:grid;place-items:center;transition:transform .35s,background .35s}
+  .cover:hover .disc{transform:scale(1.08);background:rgba(255,255,255,.08)}
+  .cover .disc svg{margin-left:5px}
+  .cover .t{font-family:var(--f-mono);font-size:11px;letter-spacing:.42em;color:#cfcfcf}
+  .cover.hide{opacity:0;pointer-events:none}
+  .meta{width:min(1400px,100%);display:flex;flex-wrap:wrap;gap:10px 28px;align-items:baseline;
+    font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;color:var(--dim);}
+  .meta .ttl{font-family:var(--f-serif);font-size:15px;letter-spacing:.3em;color:#e8e8e8;margin-right:8px}
+  .meta .dot{color:#3a3a3a}
+  .hint{width:min(1400px,100%);font-size:12px;line-height:2;letter-spacing:.14em;color:#6f6f6f;padding-bottom:34px}
+  .hint b{color:#a9a9a9;font-weight:400}
+  @media (max-width:700px){ header{padding:14px 16px;gap:10px} main{padding:14px 12px} .hint{padding-bottom:20px} }
+</style>
+</head>
+<body>
+<header>
+  <a href="../index.html">← 世界观察档案库</a>
+  <span class="sp"></span>
+  <span>FILM · <b>96″</b></span>
+  <span>1920×1080</span>
+  <span>24 FPS</span>
+</header>
+
+<main>
+  <div class="frame">
+    <video id="v" src="promo-720p.mp4" poster="poster.jpg" preload="metadata" playsinline controls
+           controlslist="nodownload noplaybackrate"></video>
+    <div class="cover" id="cover">
+      <img src="poster.jpg" alt="">
+      <div class="play">
+        <div class="disc"><svg width="26" height="26" viewBox="0 0 24 24" fill="#f2f2f2"><path d="M8 5.5v13l11-6.5z"/></svg></div>
+        <div class="t">PLAY · 96 SECONDS</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <span class="ttl">世界观察档案库 · 宣传片</span>
+    <span>A WORLD EXISTS BECAUSE IT IS READ</span>
+    <span class="dot">·</span>
+    <span>画面：真实站点逐帧重放 + 程序化合成</span>
+    <span class="dot">·</span>
+    <span>配乐：代码合成</span>
+  </div>
+  <div class="hint">
+    <b>关于这支片子</b> —— 片中没有一句旁白，也没有一个镜头是"演示功能"。它把站点里那些静态的档案，
+    还原成一个正在被观测的世界：门禁、星球、神祇、组织、纪元、检索、正文，最后落回你的屏幕。<br>
+    如果你只看得进一句话：<b>一个世界，靠被读而存在。</b>
+  </div>
+</main>
+
+<script>
+  var v = document.getElementById('v'), cover = document.getElementById('cover');
+  function play(){ cover.classList.add('hide'); v.play().catch(function(){}); }
+  cover.addEventListener('click', play);
+  v.addEventListener('ended', function(){ cover.classList.remove('hide'); v.currentTime = 0; });
+  v.addEventListener('play', function(){ cover.classList.add('hide'); });
+</script>
+</body>
+</html>

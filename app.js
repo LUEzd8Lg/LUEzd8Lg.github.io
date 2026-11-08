@@ -4300,6 +4300,9 @@
   let _ggHandle = null;
   function destroyGlobe() {
     if (_ggHandle) { try { _ggHandle.destroy(); } catch (e) {} _ggHandle = null; }
+    // 同时销毁地表缩放引擎，避免 rAF / 事件监听泄漏
+    if (window.GaiaPlanet3D) { try { window.GaiaPlanet3D.destroy(); } catch (e) {} }
+    if (window.GaiaPlanet) { try { window.GaiaPlanet.destroy(); } catch (e) {} }
   }
 
   function mountPlanetStage() {
@@ -4319,8 +4322,13 @@
   }
 
   // ============ 星球档案页（盖亚全息观测） ============
+  // 两种模式：
+  //   orbit  —— Three.js 3D 星球（原有）
+  //   scale  —— 全比例尺地表（planet.js）：行星 → 36区 → 26单元 → 城镇街道楼房
+  let _planetMode = 'scale';
   function renderPlanet() {
     if (!view) return;
+    const initial = _planetMode;
     view.innerHTML = `
       <section class="planet-view">
         <div class="planet-head">
@@ -4328,26 +4336,54 @@
             <div class="planet-title">盖亚 · 全息观测</div>
             <div class="planet-title-en">GAIA-04 · HOLOGRAPHIC SURVEY</div>
           </div>
-          <div class="planet-hint">拖拽旋转 · 滚轮缩放 · 四洲轮廓已校准</div>
+          <div class="planet-modes" id="planet-modes">
+            <button type="button" data-pm="scale" class="${initial === 'scale' ? 'active' : ''}">全比例尺</button>
+            <button type="button" data-pm="orbit" class="${initial === 'orbit' ? 'active' : ''}">轨道视角</button>
+          </div>
         </div>
-        <div class="planet-stage">
-          <canvas class="planet-canvas" id="planet-canvas" role="img" aria-label="盖亚全息星球：拖拽旋转、滚轮缩放"></canvas>
-          <div class="planet-scanlines"></div>
+        <div class="planet-stage" id="planet-stage">
+          ${initial === 'orbit' ? `
+            <canvas class="planet-canvas" id="planet-canvas" role="img" aria-label="盖亚全息星球"></canvas>
+            <div class="planet-scanlines"></div>
+            <div class="planet-readout">MODE <b>ORBITAL SURVEY</b><br>GRID <b>15° × 15°</b></div>
+          ` : `
+            <div id="planet-host" class="planet-host"></div>
+          `}
           <div class="planet-corner planet-corner-tl"></div>
           <div class="planet-corner planet-corner-tr"></div>
           <div class="planet-corner planet-corner-bl"></div>
           <div class="planet-corner planet-corner-br"></div>
-          <div class="planet-readout">MODE <b>ORBITAL SURVEY</b><br>GRID <b>15° × 15°</b><br>MOON <b>CRIMSON · TRACKING</b></div>
-          <div class="planet-legend">
-            中州 <i style="background:#c9a227"></i><br>
-            北洲 <i style="background:#7fa8c9"></i><br>
-            东洲 <i style="background:#c9a86a"></i><br>
-            南洲 <i style="background:#a98fb8"></i>
-          </div>
         </div>
       </section>`;
-    mountPlanetStage();
+
+    if (initial === 'orbit') mountPlanetStage();
+    else mountPlanetScale();
+
+    view.querySelectorAll('#planet-modes button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const m = btn.dataset.pm;
+        if (m === _planetMode) return;
+        _planetMode = m;
+        renderPlanet();
+        if (window.SFX && SFX.navigate) SFX.navigate();
+      });
+    });
     document.title = '盖亚全息观测 · 世界观察档案库';
+  }
+
+  // 全比例尺地表引擎：优先三维（planet3d），无 WebGL 回退二维（planet.js）
+  function mountPlanetScale() {
+    const host = document.getElementById('planet-host');
+    if (!host) return;
+    if (window.GaiaPlanet3D && window.GaiaPlanet3D.available()) {
+      const ok = window.GaiaPlanet3D.mount(host);
+      if (ok) return;
+    }
+    if (window.GaiaPlanet) {
+      window.GaiaPlanet.mount(host);
+    } else {
+      host.innerHTML = '<div style="padding:40px;font-family:var(--f-mono);font-size:12px;color:var(--text-2)">planet.js 未加载 —— 请检查 index.html 中的脚本引用。</div>';
+    }
   }
 
   // ============ HERO 粒子尘埃 ============

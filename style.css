@@ -9253,3 +9253,141 @@ html.theme-light .planet-scanlines{ background:repeating-linear-gradient(0deg, r
 /* ---- 列表卡片摘要：从 2 行放宽到 3 行，便于扫读 ---- */
 .anom-body-mid .ec-summary { -webkit-line-clamp: 3; min-height: 3.2em; }
 
+
+/* ============================================================
+   ⑪ 星球 · 全比例尺地表（planet.js）
+   行星 → 36区 → 26单元 → 城镇街道/楼房
+   ============================================================ */
+.planet-modes{display:flex;gap:6px;}
+.planet-modes button{
+  border:1px solid var(--border);background:transparent;color:var(--text-2);
+  padding:5px 12px;cursor:pointer;
+  font-family:var(--f-mono);font-size:10px;letter-spacing:1px;transition:all .2s;
+}
+.planet-modes button:hover{border-color:var(--silver);color:var(--silver);}
+.planet-modes button.active{border-color:var(--gold-1);color:var(--gold-2);background:var(--gold-soft);}
+
+.planet-host{position:absolute;inset:0;overflow:hidden;touch-action:none;}
+.planet-host .planet-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none;}
+
+/* HUD */
+.planet-hud{position:absolute;inset:0;pointer-events:none;font-family:var(--f-mono);}
+.planet-hud > *{pointer-events:auto;}
+.ph-top{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:10px 14px;flex-wrap:wrap;
+  background:linear-gradient(180deg,rgba(4,6,7,0.9),rgba(4,6,7,0));
+}
+.ph-crumb{font-size:11px;letter-spacing:1px;color:var(--text-2);display:flex;gap:7px;align-items:baseline;flex-wrap:wrap;}
+.ph-crumb b{color:var(--gold-2);font-weight:700;}
+.ph-crumb span{font-size:9px;color:var(--text-3);letter-spacing:1.5px;}
+.ph-crumb a{color:var(--text-2);text-decoration:none;border-bottom:1px dotted var(--border-2);}
+.ph-crumb a:hover{color:var(--silver-2);}
+.ph-actions{display:flex;gap:6px;}
+.ph-btn{
+  border:1px solid var(--border);background:rgba(6,9,11,0.72);color:var(--text-2);
+  padding:5px 11px;cursor:pointer;font-family:var(--f-mono);font-size:10px;letter-spacing:1px;
+  backdrop-filter:blur(4px);transition:all .18s;
+}
+.ph-btn:hover{border-color:var(--silver);color:var(--silver);}
+
+.ph-left{
+  position:absolute;left:12px;top:52px;bottom:56px;width:214px;
+  overflow-y:auto;padding:10px;
+  border:1px solid var(--border);background:rgba(5,8,10,0.82);
+  backdrop-filter:blur(6px);
+}
+.ph-right{
+  position:absolute;right:12px;top:52px;width:236px;
+  padding:12px;border:1px solid var(--border);background:rgba(5,8,10,0.82);
+  backdrop-filter:blur(6px);
+}
+.ph-panel-title{
+  font-size:10px;letter-spacing:2px;color:var(--gold-1);
+  border-bottom:1px solid var(--border);padding-bottom:7px;margin-bottom:9px;
+  display:flex;justify-content:space-between;align-items:baseline;gap:6px;
+}
+.ph-panel-title span{font-size:8px;letter-spacing:1px;color:var(--text-3);}
+.ph-region-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.ph-region{
+  display:grid;grid-template-columns:8px 18px 1fr;align-items:center;gap:5px;
+  border:1px solid transparent;background:rgba(255,255,255,0.02);
+  padding:4px 5px;cursor:pointer;text-align:left;
+  font-family:var(--f-mono);font-size:9.5px;color:var(--text-2);transition:all .15s;
+}
+.ph-region:hover{background:rgba(232,232,232,0.06);border-color:var(--border-2);color:var(--text);}
+.ph-region.active{border-color:var(--gold-1);background:var(--gold-soft);color:var(--gold-2);}
+.ph-region i{width:8px;height:8px;display:block;transform:rotate(45deg);}
+.ph-region em{font-style:normal;color:var(--text-3);font-size:8.5px;}
+.ph-region span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.ph-kv{display:flex;justify-content:space-between;gap:8px;font-size:10px;padding:3px 0;color:var(--text-3);}
+.ph-kv b{color:var(--text);font-weight:600;text-align:right;font-size:10.5px;}
+.ph-legend{display:grid;gap:3px;margin-top:9px;padding-top:8px;border-top:1px dashed var(--border);font-size:9px;color:var(--text-3);}
+.ph-legend span{display:flex;align-items:center;gap:6px;}
+.ph-legend i{width:8px;height:8px;display:block;transform:rotate(45deg);}
+.ph-hintline{margin-top:10px;padding-top:8px;border-top:1px dashed var(--border);font-size:9px;line-height:1.7;color:var(--text-3);}
+.ph-scale{
+  position:absolute;right:14px;bottom:14px;
+  font-size:9px;letter-spacing:1px;color:var(--text-3);
+  border:1px solid var(--border);background:rgba(5,8,10,0.8);padding:4px 9px;
+}
+.ph-tip{
+  position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+  font-size:9px;letter-spacing:.5px;color:var(--text-3);white-space:nowrap;
+  background:rgba(5,8,10,0.7);padding:4px 12px;border:1px solid var(--border);
+}
+@media (max-width: 900px){
+  .ph-left{display:none;}
+  .ph-right{width:180px;top:auto;bottom:56px;right:10px;}
+  .ph-tip{display:none;}
+}
+
+/* 36 区面板：可收起，收起点地图 */
+.ph-collapse{
+  cursor:pointer;color:var(--text-3);font-size:11px;letter-spacing:0;
+  padding:0 3px;border:1px solid var(--border);line-height:1.2;
+}
+.ph-collapse:hover{color:var(--silver-2);border-color:var(--border-2);}
+.ph-left.collapsed{width:auto;max-width:132px;bottom:auto;}
+.ph-left.collapsed .ph-region-grid{display:none;}
+.ph-left.collapsed .ph-panel-title span:last-child{display:none;}
+
+/* 小屏：右侧信息卡收紧，避免遮挡星球 */
+@media (max-width: 520px){
+  .ph-right{width:min(158px,44vw);padding:8px 9px;top:auto;bottom:64px;right:8px;opacity:.94;}
+  .ph-right .ph-legend,
+  .ph-right .ph-hintline{display:none;}
+  .ph-right .ph-kv{font-size:9px;padding:2px 0;}
+  .ph-right .ph-kv b{font-size:9.5px;}
+  .ph-panel-title{font-size:9px;margin-bottom:6px;padding-bottom:5px;}
+  .ph-scale{display:none;}
+}
+
+/* ============ planet3d 三维星球引擎 ============ */
+.planet3d-fade{position:absolute;inset:0;z-index:5;background:#000;opacity:0;pointer-events:none;transition:opacity .16s;}
+.planet3d-fade.on{opacity:1;}
+.planet3d-labels{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden;}
+.p3d-lbl{
+  position:absolute;left:0;top:0;display:none;white-space:nowrap;
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.5px;color:var(--text);
+  background:rgba(4,6,8,.58);border:1px solid rgba(150,170,180,.28);padding:1px 5px;
+  text-shadow:0 1px 3px rgba(0,0,0,.85);
+}
+.p3d-lbl i{display:inline-block;width:6px;height:6px;margin-right:4px;transform:rotate(45deg);}
+.p3d-lbl-warn{color:#e8b7ae;border-color:rgba(190,90,70,.5);}
+.p3d-lbl-town{font-size:11px;letter-spacing:2px;color:var(--gold-2);background:rgba(4,6,8,.4);border:none;}
+.ph-sun-wrap{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:rgba(6,9,11,.72);padding:3px 7px;}
+.ph-range{width:90px;height:3px;accent-color:var(--gold-1);cursor:pointer;}
+.ph-cell-panel{margin-top:14px;}
+.ph-cell-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;}
+.ph-cell{
+  display:flex;align-items:center;gap:5px;border:1px solid transparent;
+  background:rgba(255,255,255,.02);padding:3px 5px;cursor:pointer;text-align:left;
+  font-family:var(--f-mono);font-size:9px;color:var(--text-2);transition:all .15s;
+}
+.ph-cell:hover{background:rgba(232,232,232,.06);border-color:var(--border-2);color:var(--text);}
+.ph-cell.active{border-color:var(--gold-1);background:var(--gold-soft);color:var(--gold-2);}
+.ph-cell i{width:7px;height:7px;flex:none;transform:rotate(45deg);}
+.ph-cell em{font-style:normal;color:var(--text-3);font-size:8px;}

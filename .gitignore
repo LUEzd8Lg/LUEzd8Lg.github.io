@@ -5,6 +5,19 @@ worker/
 mobile_shots/
 .trae/
 serve.ps1
+# 开发素材与大型媒体（不推送）
+.qa/
+.tools/
+.trae-html-share-packages/
+cine/
+film/
+film3/
+promo/
+world/
+probe3d.html
+test-planet3d.html
+film_framesluma.txt
+/film4-*.mp4
 # 系统文件
 Thumbs.db
 .DS_Store
